@@ -9,7 +9,7 @@ from .registry import ControlRegistry
 
 
 def main() -> int:
-    parser = argparse.ArgumentParser(description="DevFlow Stage 1 control plane")
+    parser = argparse.ArgumentParser(description="DevFlow control plane")
     parser.add_argument("--root", type=Path, default=Path(os.environ.get("DEVFLOW_ROOT", ".")))
     parser.add_argument("--registry", type=Path, default=None)
     parser.add_argument("--contracts", type=Path, default=None)
@@ -25,6 +25,30 @@ def main() -> int:
     activate = sub.add_parser("activate")
     activate.add_argument("project_id")
     sub.add_parser("serve")
+    continuity = sub.add_parser("continuity")
+    commands = continuity.add_subparsers(dest="continuity_command", required=True)
+    names = ("init", "status", "resume", "lease-acquire", "lease-renew", "lease-release",
+             "prepare", "start", "finish", "resolve", "checkpoint", "snapshot")
+    for name in names:
+        command = commands.add_parser(name)
+        command.add_argument("--project", default=None)
+        if name in {"lease-acquire", "lease-renew", "lease-release", "prepare", "start", "finish", "resolve", "checkpoint"}:
+            command.add_argument("--owner", required=True)
+        if name in {"lease-renew", "lease-release", "prepare", "start", "finish", "resolve", "checkpoint"}:
+            command.add_argument("--execution-id", required=True)
+            command.add_argument("--fence", type=int, required=True)
+        if name == "lease-acquire":
+            command.add_argument("--seconds", type=int, default=600)
+        if name in {"prepare", "start", "finish", "resolve"}:
+            command.add_argument("--key", required=True)
+        if name == "prepare":
+            command.add_argument("--intent", required=True)
+        if name in {"finish", "resolve"}:
+            command.add_argument("--outcome", required=True,
+                                 choices=["SUCCEEDED", "FAILED", "UNKNOWN"] if name == "finish" else ["SUCCEEDED", "FAILED", "NO_EFFECT"])
+            command.add_argument("--evidence", required=True)
+        if name == "snapshot":
+            command.add_argument("--checkpoint-id", default=None)
     args = parser.parse_args()
     root = args.root.resolve()
     try:
@@ -32,7 +56,41 @@ def main() -> int:
             args.registry or root / "control" / "registry.json",
             Contracts(args.contracts or root / "contracts"),
         )
-        if args.command in {"init", "register"}:
+        if args.command == "continuity":
+            from .continuity import from_registry
+            store = from_registry(registry, args.project)
+            name = args.continuity_command
+            if name == "init":
+                result = store.initialize()
+            elif name == "status":
+                result = store.status()
+            elif name == "resume":
+                result = store.resume_plan()
+            elif name == "snapshot":
+                result = store.snapshot(args.checkpoint_id)
+            elif name == "lease-acquire":
+                result = store.acquire(args.owner, args.seconds)
+            else:
+                identity = (args.owner, args.execution_id, args.fence)
+                if name == "lease-renew":
+                    result = store.renew(*identity)
+                elif name == "lease-release":
+                    result = store.release(*identity)
+                elif name == "prepare":
+                    try:
+                        intent = json.loads(args.intent)
+                    except ValueError as exc:
+                        raise DevFlowError("Intent must be valid JSON") from exc
+                    result = store.prepare(*identity, args.key, intent)
+                elif name == "start":
+                    result = store.start(*identity, args.key)
+                elif name == "finish":
+                    result = store.finish(*identity, args.key, args.outcome, args.evidence)
+                elif name == "resolve":
+                    result = store.resolve(*identity, args.key, args.outcome, args.evidence)
+                else:
+                    result = store.checkpoint(*identity)
+        elif args.command in {"init", "register"}:
             result = registry.register(
                 args.settings or root / ".ai-project" / "project.settings.json", args.activate
             )

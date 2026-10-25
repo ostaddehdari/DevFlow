@@ -1,0 +1,26 @@
+{
+  "schema_version": "1.0",
+  "checkpoint_id": "CP-STAGE02-VERIFIED",
+  "project_id": "devflow",
+  "created_at": "2026-10-25T16:51:45.684712+00:00",
+  "reason": "stage_completed",
+  "safe_to_resume": true,
+  "snapshot": {
+    "stage_id": "STAGE-02",
+    "work_id": "WORK-02-05",
+    "git_head_sha": "2e97e4d57a0c6bdb683767b0c6dcf39241b242bf",
+    "server_deployments": {},
+    "last_action": "stage2_local_continuity_verified",
+    "next_action": "resolve_stage3_identity_and_transport",
+    "note": "Operator verification script runs source tests, real MCP smoke and initializes the local ledger. HEAD is the parent observed before this milestone commit. External effects, network service, Vault and live deployment health are not verified."
+  },
+  "do_not_repeat": [
+    "create_github_repository",
+    "commit_stage0",
+    "push_stage0",
+    "bind_control_server_address",
+    "run_stage1_bootstrap_on_control_server",
+    "install_stage1",
+    "implement_stage2_execution_leases"
+  ]
+}

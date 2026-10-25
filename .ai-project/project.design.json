@@ -92,15 +92,18 @@
       "registry_projects",
       "registry_servers",
       "registry_validate",
-      "project_status"
+      "project_status",
+      "continuity_status"
     ],
-    "execution_readiness_scope": "STAGE-02 local continuity implementation only; network and sensitive operations require their own prerequisites.",
+    "execution_readiness_scope": "STAGE-03 identity and authorization design; resolve transport and secret backend prerequisites before network exposure.",
     "status_sources": {
       "stage0": "user-provided Git push output for c76c386",
       "stage1": "user-provided server bootstrap: 21 passed, registry ok, real MCP smoke passed; commit cfc0d427ace44210b3fc678c43215c01439122be"
     },
     "settings_flags_are_declarations": true,
-    "live_health_verified": false
+    "live_health_verified": false,
+    "continuity_storage": ".devflow/continuity.sqlite3",
+    "external_effect_runner": false
   },
   "stages": [
     {
@@ -234,7 +237,7 @@
       "id": "STAGE-02",
       "number": 2,
       "title": "تداوم اجرا و مالکیت عملیات",
-      "status": "PLANNED",
+      "status": "COMPLETED",
       "goal": "پیش از هر اجرای خودکار، مالکیت اجرا و نقطهٔ ادامه قابل اثبات باشند.",
       "depends_on": [
         "STAGE-01"
@@ -245,7 +248,7 @@
           "number": "2.1",
           "title": "قرارداد عملیاتی اجرا",
           "type": "development",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "تعریف انتقال وضعیت‌ها، کلید یکتایی عملیات و مالک lease.",
           "inputs": [
             "قراردادهای contracts/",
@@ -292,7 +295,7 @@
           "number": "2.2",
           "title": "قفل و lease پایدار",
           "type": "development",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "پیاده‌سازی acquire، renew، release و کنترل مالکیت با زمان انقضا و fencing token افزایشی.",
           "inputs": [
             "قراردادهای contracts/",
@@ -339,7 +342,7 @@
           "number": "2.3",
           "title": "چرخهٔ checkpoint",
           "type": "development",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "ثبت اتمی snapshot با هویت پروژه، Git و پیش‌نیازها.",
           "inputs": [
             "قراردادهای contracts/",
@@ -386,7 +389,7 @@
           "number": "2.4",
           "title": "ساخت resume bundle",
           "type": "development",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "بازسازی وضعیت ادامه از شواهد روی دیسک و Git.",
           "inputs": [
             "قراردادهای contracts/",
@@ -433,7 +436,7 @@
           "number": "2.5",
           "title": "آزمون قطع اجرا",
           "type": "testing",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "آزمون قطع پردازه بین ثبت قصد، اجرا و ثبت نتیجه.",
           "inputs": [
             "قراردادهای contracts/",

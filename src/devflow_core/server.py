@@ -1,4 +1,4 @@
-"""Read-only ServerMaster bootstrap. Only stdio is exposed in Stage 1."""
+"""Read-only ServerMaster bootstrap. Only stdio is exposed."""
 
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
@@ -9,7 +9,7 @@ from .registry import ControlRegistry
 
 def build_server(registry: ControlRegistry) -> FastMCP:
     mcp = FastMCP("DevFlow ServerMaster", instructions=(
-        "Read-only Stage 1 registry. Recorded server settings are declarations, "
+        "Read-only registry and local continuity inspection. Recorded server settings are declarations, "
         "not live health checks. No shell, deployment, vault or watchdog is implemented."
     ))
     annotations = ToolAnnotations(readOnlyHint=True, destructiveHint=False,
@@ -20,7 +20,7 @@ def build_server(registry: ControlRegistry) -> FastMCP:
         """Report bootstrap version and actual supported capabilities."""
         return {"ok": True, "version": __version__, "transport": "stdio",
                 "read_only": True, "remote_agent": False, "vault": False,
-                "execution_lease": False, "watchdog": False}
+                "execution_lease": True, "lease_scope": "cooperative_local_ledger", "watchdog": False}
 
     @mcp.tool(annotations=annotations)
     def registry_projects() -> dict:
@@ -43,5 +43,11 @@ def build_server(registry: ControlRegistry) -> FastMCP:
     def project_status(project_id: str | None = None) -> dict:
         """Read registered continuity documents and report missing prerequisites."""
         return registry.project_status(project_id)
+
+    @mcp.tool(annotations=annotations)
+    def continuity_status(project_id: str | None = None) -> dict:
+        """Inspect local lease, unresolved operations and latest checkpoint without writes."""
+        from .continuity import from_registry
+        return from_registry(registry, project_id).status()
 
     return mcp

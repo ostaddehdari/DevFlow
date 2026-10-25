@@ -1,15 +1,16 @@
 # Next
 
-1. Apply the canonical-design patch and run `bash scripts/finalize-stage1.sh`.
-2. Commit the verified design, status-reader changes and refreshed evidence locally.
-3. Start Stage 2: state transitions, execution leases with fencing, checkpoint lifecycle,
-   resume bundles and interrupted-execution tests, following `project.design.json`.
-4. Resolve identity, actual secret backend and authorized transport before Stage 3
-   exposes any network service or enables a remote agent.
-5. Complete controlled execution and recovery before enabling watchdog jobs.
-6. Connect/install the private plugin and enable reporting only when prerequisites
-   and destinations are established.
+1. Install the Stage 2 patch and run `bash scripts/verify-stage2.sh`.
+2. Commit the verified source and milestone locally; create a runtime checkpoint
+   with `PYTHONPATH=src .venv/bin/python scripts/create-local-checkpoint.py`.
+3. Inspect `bash scripts/devflow continuity resume`; READY is expected with a clean
+   checkout and no unresolved effects. It is a plan, not automatic execution.
+4. Start Stage 3 with identity and authorization design; decide actual secret
+   backend, client identity and transport before exposing any network service.
+5. Stage 4 must make every external executor/target enforce fencing/idempotency;
+   ledger fencing by itself cannot stop an external paused worker's side effects.
+6. Implement controlled execution/recovery before enabling watchdogs or reporting.
 
-Already verified by operator output: Stage 0 commit/push and server binding;
-Stage 1 server bootstrap, 21 source tests, registry validation and real stdio MCP
-handshake, discovery and calls. Operator Stage 1 commit: cfc0d42.
+Verified by operator output before this patch: Stage 1, 34 tests, registry and real
+stdio MCP, source commit 2e97e4d. Stage 2 is pending the control-server verifier.
+GitHub publication is separate from local source verification and commits.

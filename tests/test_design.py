@@ -18,8 +18,9 @@ def design():
 def test_canonical_design(contracts):
     value = design()
     validate_design(value, contracts, "devflow")
-    assert [s["id"] for s in value["stages"] if s["status"] == "COMPLETED"] == ["STAGE-00", "STAGE-01"]
-    assert all(s["status"] == "PLANNED" for s in value["stages"][2:])
+    assert all(s["status"] == "COMPLETED" for s in value["stages"][:2])
+    assert value["stages"][2]["status"] in {"PLANNED", "VERIFYING", "COMPLETED"}
+    assert all(s["status"] == "PLANNED" for s in value["stages"][3:])
 
 
 @pytest.mark.parametrize("case", ["identity", "duplicate", "unknown", "cycle", "incomplete", "blocked", "outside"])
@@ -75,11 +76,11 @@ def test_verified_record_updates_checkpoint_and_is_idempotent(settings_path):
     shutil.copy(ROOT / ".ai-project/project.design.json", settings_path.parent)
     state_path = settings_path.parent / "state.json"
     state = json.loads(state_path.read_text())
-    state["current"].update(stage_status="COMPLETED", work_status="COMPLETED")
+    state["current"].update(stage_id="STAGE-01", stage_status="COMPLETED", work_status="COMPLETED")
     state_path.write_text(json.dumps(state))
     resume_path = settings_path.parent / "resume.bundle.json"
     resume = json.loads(resume_path.read_text())
-    resume["current"]["status"] = "COMPLETED"
+    resume["current"].update(stage_id="STAGE-01", status="COMPLETED")
     resume_path.write_text(json.dumps(resume))
     subprocess.run(["git", "init", "-b", "stage/01-servermaster-core", str(root)], check=True, capture_output=True)
     subprocess.run(["git", "-C", str(root), "-c", "user.name=DevFlow Test", "-c", "user.email=test@example.invalid",
