@@ -1,0 +1,24 @@
+{
+  "schema_version": "1.0",
+  "checkpoint_id": "CP-STAGE01-VERIFIED",
+  "project_id": "devflow",
+  "created_at": "2026-10-25T16:08:30.843628+00:00",
+  "reason": "stage_completed",
+  "safe_to_resume": true,
+  "snapshot": {
+    "stage_id": "STAGE-01",
+    "work_id": "WORK-01-01",
+    "git_head_sha": "cfc0d427ace44210b3fc678c43215c01439122be",
+    "server_deployments": {},
+    "last_action": "stage1_bootstrap_and_design_verified",
+    "next_action": "implement_stage2_execution_leases",
+    "note": "Stage 1 bootstrap confirmed by operator output; this host validates the design and installed source. HEAD is observed before this record commit; no live-health, remote endpoint or deployed SHA is inferred."
+  },
+  "do_not_repeat": [
+    "create_github_repository",
+    "commit_stage0",
+    "push_stage0",
+    "bind_control_server_address",
+    "run_stage1_bootstrap_on_control_server"
+  ]
+}

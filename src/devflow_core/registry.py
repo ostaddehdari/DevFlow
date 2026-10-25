@@ -12,6 +12,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 
 from .contracts import Contracts, DevFlowError, read_json
+from .design import validate_design
 
 
 def utc_now() -> str:
@@ -192,8 +193,16 @@ class ControlRegistry:
                 raise DevFlowError("Project document identity mismatch")
             # Read only: the registry never advances state or marks a deployment healthy.
             result["documents"][filename] = document
-        if not (directory / "project.design.json").exists():
+        design_path = directory / "project.design.json"
+        if not design_path.resolve().is_relative_to(root):
+            raise DevFlowError("Project design escapes its registered root")
+        if not design_path.exists():
             result["issues"].append("Project design is not present")
+        else:
+            design = read_json(design_path)
+            reject_credentials(design)
+            validate_design(design, self.contracts, selected)
+            result["documents"]["project.design.json"] = design
         state = result["documents"].get("state.json", {})
         checkpoint_id = state.get("latest_checkpoint_id")
         if checkpoint_id:

@@ -1,0 +1,1343 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "id": "devflow",
+    "name": "DevFlow",
+    "description": "AI Development, Deployment & Continuity Platform",
+    "status": "ACTIVE"
+  },
+  "objectives": [
+    {
+      "id": "OBJ-01",
+      "title": "مدیریت چند پروژه و سرور با زمینه و قرارداد یکسان",
+      "priority": "high"
+    },
+    {
+      "id": "OBJ-02",
+      "title": "توسعه و استقرار قابل‌آزمون و قابل‌ردیابی",
+      "priority": "high"
+    },
+    {
+      "id": "OBJ-03",
+      "title": "ادامهٔ ایمن پس از قطع گفتگو یا فرایند",
+      "priority": "critical"
+    },
+    {
+      "id": "OBJ-04",
+      "title": "حفظ اسرار و کنترل دسترسی به عملیات حساس",
+      "priority": "critical"
+    }
+  ],
+  "scope": {
+    "included": [
+      "رجیستری پروژه و سرور",
+      "ابزارهای MCP",
+      "طراحی و اجرای مرحله و Work",
+      "checkpoint و resume",
+      "کنترل خطا و استقرار",
+      "اتصال افزونهٔ خصوصی و گزارش وضعیت"
+    ],
+    "excluded": [
+      "اتوماسیون مرورگر",
+      "ذخیرهٔ رمز و توکن در Git",
+      "اجرای نامحدود و بدون مجوز روی سرور"
+    ],
+    "future": [
+      "مراحل 2 تا 6 برنامهٔ ادامه هستند؛ قابلیت موجود محسوب نمی‌شوند."
+    ]
+  },
+  "architecture": {
+    "control_server": {
+      "server_id": "devflow-control-server",
+      "name": "DevFlow Control Server",
+      "address": "5.61.27.185",
+      "hostname": null,
+      "role": "control",
+      "environment": "production",
+      "connection": {
+        "protocol": "ssh",
+        "port": 2233,
+        "username": "root",
+        "credential_ref": "vault://servers/devflow-control-server/root"
+      },
+      "os": "ubuntu-24.04",
+      "project_root": "/opt/devflow",
+      "public_url": null,
+      "health_url": null,
+      "agent": {
+        "enabled": false,
+        "endpoint": null,
+        "status": "not_installed"
+      },
+      "capabilities": [
+        "shell",
+        "filesystem",
+        "git",
+        "docker",
+        "systemd",
+        "nginx",
+        "postgresql",
+        "redis",
+        "network"
+      ],
+      "metadata": {}
+    },
+    "source_repository": "ostaddehdari/DevFlow",
+    "registry_path": "control/registry.json",
+    "project_documents_root": ".ai-project",
+    "contracts_source": "contracts/",
+    "implemented_transport": "stdio",
+    "implemented_mcp_tools": [
+      "servermaster_ping",
+      "registry_projects",
+      "registry_servers",
+      "registry_validate",
+      "project_status"
+    ],
+    "execution_readiness_scope": "STAGE-02 local continuity implementation only; network and sensitive operations require their own prerequisites.",
+    "status_sources": {
+      "stage0": "user-provided Git push output for c76c386",
+      "stage1": "user-provided server bootstrap: 21 passed, registry ok, real MCP smoke passed; commit cfc0d427ace44210b3fc678c43215c01439122be"
+    },
+    "settings_flags_are_declarations": true,
+    "live_health_verified": false
+  },
+  "stages": [
+    {
+      "id": "STAGE-00",
+      "number": 0,
+      "title": "قراردادها و مخزن پایه",
+      "status": "COMPLETED",
+      "goal": "قراردادهای مشترک و سورس مهارت‌ها به مخزن متصل باشند.",
+      "depends_on": [],
+      "works": [
+        {
+          "id": "WORK-00-01",
+          "number": "0.1",
+          "title": "قراردادها، تنظیمات و سورس افزونه",
+          "type": "infrastructure",
+          "status": "COMPLETED",
+          "description": "ثبت Stage 0 و اتصال مخزن مطابق شواهد همین گفتگو.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "کامیت c76c386 روی main ثبت شده است.",
+            "قراردادهای اصلی و نسخهٔ plugin/assets/contracts یکسان‌اند."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              "git rev-parse --verify c76c386^{commit}"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        }
+      ],
+      "completion_policy": {
+        "all_works_required": true,
+        "tests_must_pass": true,
+        "deployment_must_pass": false
+      }
+    },
+    {
+      "id": "STAGE-01",
+      "number": 1,
+      "title": "رجیستری کنترل و ServerMaster اولیه",
+      "status": "COMPLETED",
+      "goal": "رجیستری معتبر و ابزارهای فقط‌خواندنی با stdio کار کنند.",
+      "depends_on": [
+        "STAGE-00"
+      ],
+      "works": [
+        {
+          "id": "WORK-01-01",
+          "number": "1.1",
+          "title": "ثبت پروژه و سرور و آزمون MCP",
+          "type": "development",
+          "status": "COMPLETED",
+          "description": "مرحلهٔ نصب‌شده روی سرور 5.61.27.185؛ شواهد: خروجی کاربر شامل 21 آزمون موفق و MCP smoke.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-00-01"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "ثبت و اعتبارسنجی یک پروژه و یک سرور موفق است.",
+            "21 آزمون نصب Stage 1 و handshake و پنج ابزار MCP موفق بوده‌اند.",
+            "خطا باعث بازنویسی رجیستری معتبر نمی‌شود؛ ثبت هم‌زمان پروژه‌ها داده را از بین نمی‌برد."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q",
+              "bash scripts/devflow validate",
+              ".venv/bin/python scripts/smoke_mcp.py --root /opt/devflow"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        }
+      ],
+      "completion_policy": {
+        "all_works_required": true,
+        "tests_must_pass": true,
+        "deployment_must_pass": false
+      }
+    },
+    {
+      "id": "STAGE-02",
+      "number": 2,
+      "title": "تداوم اجرا و مالکیت عملیات",
+      "status": "PLANNED",
+      "goal": "پیش از هر اجرای خودکار، مالکیت اجرا و نقطهٔ ادامه قابل اثبات باشند.",
+      "depends_on": [
+        "STAGE-01"
+      ],
+      "works": [
+        {
+          "id": "WORK-02-01",
+          "number": "2.1",
+          "title": "قرارداد عملیاتی اجرا",
+          "type": "development",
+          "status": "PENDING",
+          "description": "تعریف انتقال وضعیت‌ها، کلید یکتایی عملیات و مالک lease.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-01-01"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "انتقال‌های مجاز و نامجاز حالت مشخص باشند.",
+            "ثبت قصد اجرا از اثبات نتیجهٔ اجرا تفکیک شود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-02-02",
+          "number": "2.2",
+          "title": "قفل و lease پایدار",
+          "type": "development",
+          "status": "PENDING",
+          "description": "پیاده‌سازی acquire، renew، release و کنترل مالکیت با زمان انقضا و fencing token افزایشی.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-02-01"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "در رقابت چند پردازه فقط یک مالک معتبر وجود داشته باشد.",
+            "مالک منقضی‌شده نتواند ثبت نتیجه یا اثر جدید انجام دهد."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-02-03",
+          "number": "2.3",
+          "title": "چرخهٔ checkpoint",
+          "type": "development",
+          "status": "PENDING",
+          "description": "ثبت اتمی snapshot با هویت پروژه، Git و پیش‌نیازها.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-02-02"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "checkpoint خراب یا متعلق به پروژهٔ دیگر رد شود.",
+            "خطای دیسک snapshot قبلی را حفظ کند."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-02-04",
+          "number": "2.4",
+          "title": "ساخت resume bundle",
+          "type": "development",
+          "status": "PENDING",
+          "description": "بازسازی وضعیت ادامه از شواهد روی دیسک و Git.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-02-03"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "عملیات نیمه‌تمام بدون اثبات نتیجه دوباره اجرا نشود.",
+            "تعارض Git و وضعیت ثبت‌شده به‌صورت خوانا گزارش شود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-02-05",
+          "number": "2.5",
+          "title": "آزمون قطع اجرا",
+          "type": "testing",
+          "status": "PENDING",
+          "description": "آزمون قطع پردازه بین ثبت قصد، اجرا و ثبت نتیجه.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-02-04"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "قطع ناگهانی باعث دو بار اجرای اثر جانبی نشود.",
+            "قفل منقضی و نتیجهٔ مبهم قابل تشخیص باشند."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        }
+      ],
+      "completion_policy": {
+        "all_works_required": true,
+        "tests_must_pass": true,
+        "deployment_must_pass": false
+      }
+    },
+    {
+      "id": "STAGE-03",
+      "number": 3,
+      "title": "هویت، اسرار و اتصال مجاز",
+      "status": "PLANNED",
+      "goal": "اتصال راه دور تنها پس از تعیین دامنهٔ دسترسی فراهم شود.",
+      "depends_on": [
+        "STAGE-02"
+      ],
+      "works": [
+        {
+          "id": "WORK-03-01",
+          "number": "3.1",
+          "title": "هویت کنترل و عامل",
+          "type": "development",
+          "status": "PENDING",
+          "description": "تعریف هویت هر کنترل‌سرور، عامل، پروژه و کاربر و نگاشت مجوزها.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-02-05"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "فراخوانی فاقد هویت و دسترسی بین پروژه‌های غیرمجاز رد شود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-03-02",
+          "number": "3.2",
+          "title": "مدیریت اسرار",
+          "type": "security",
+          "status": "PENDING",
+          "description": "انتخاب و پیاده‌سازی backend واقعی برای credential_ref بدون قرار دادن اسرار در Git.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-03-01"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "ارجاع vault:// تنها پس از resolve موفق قابل استفاده باشد.",
+            "اسرار در خطاها، لاگ، خروجی ابزار و checkpoint ثبت نشوند."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-03-03",
+          "number": "3.3",
+          "title": "عامل محدود سرور",
+          "type": "infrastructure",
+          "status": "PENDING",
+          "description": "ثبت و ابطال عامل با فهرست قابلیت‌ها و دامنهٔ مسیر مجاز.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-03-02"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "عامل اختیار نامحدود root نگیرد.",
+            "قابلیت اعلامی با قابلیت مشاهده‌شده تفکیک شود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-03-04",
+          "number": "3.4",
+          "title": "انتقال شبکهٔ احرازهویت‌شده",
+          "type": "security",
+          "status": "PENDING",
+          "description": "پیاده‌سازی انتقال MCP، TLS و دسترسی قابل ابطال پس از انتخاب میزبان و روش احراز هویت.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-03-03"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "درخواست بدون احراز هویت رد شود.",
+            "تست دسترسی مجاز، ممنوع و ابطال موفق باشد."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        }
+      ],
+      "completion_policy": {
+        "all_works_required": true,
+        "tests_must_pass": true,
+        "deployment_must_pass": false
+      }
+    },
+    {
+      "id": "STAGE-04",
+      "number": 4,
+      "title": "اجرای محدود و استقرار",
+      "status": "PLANNED",
+      "goal": "هر عمل با طرح، مجوز، lease و شواهد نتیجه اجرا شود.",
+      "depends_on": [
+        "STAGE-03"
+      ],
+      "works": [
+        {
+          "id": "WORK-04-01",
+          "number": "4.1",
+          "title": "طرح عملیات و محدودهٔ مجاز",
+          "type": "development",
+          "status": "PENDING",
+          "description": "عملیات نوع‌دار و ورودی معتبر با precondition و postcondition.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-03-04"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "مسیر خارج پروژه و فرمان خارج قابلیت مجاز رد شود.",
+            "عمل حساس به مجوز همان عملیات متصل باشد."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-04-02",
+          "number": "4.2",
+          "title": "اجرای محدود و ثبت رخداد",
+          "type": "development",
+          "status": "PENDING",
+          "description": "اجرای فرایند با مهلت، سقف خروجی و توقف کنترل‌شده.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-04-01"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "پایان مهلت پردازه‌های فرزند را کنترل کند.",
+            "event و execution با شناسهٔ مشترک قابل ردیابی باشند."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-04-03",
+          "number": "4.3",
+          "title": "گردش Git",
+          "type": "development",
+          "status": "PENDING",
+          "description": "کار در شاخهٔ مرحله و کنترل تغییرات قبل از commit و push.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-04-02"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "تغییر کاربر حفظ شود و force push پیش‌فرض ممنوع باشد.",
+            "push فقط در مقصد و دامنهٔ مجاز انجام شود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-04-04",
+          "number": "4.4",
+          "title": "استقرار و بازگشت",
+          "type": "deployment",
+          "status": "PENDING",
+          "description": "artifact تغییرناپذیر، شناسهٔ سورس، کنترل سلامت و rollback هدفمند.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-04-03"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "deployed_sha از نسخهٔ واقعاً مشاهده‌شده استخراج شود.",
+            "خطای استقرار با آزمون واقعی بازگشت پوشش داده شود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        }
+      ],
+      "completion_policy": {
+        "all_works_required": true,
+        "tests_must_pass": true,
+        "deployment_must_pass": false
+      }
+    },
+    {
+      "id": "STAGE-05",
+      "number": 5,
+      "title": "تشخیص خطا و بازیابی",
+      "status": "PLANNED",
+      "goal": "تشخیص و اصلاح محدود با اتکا به شواهد انجام شود.",
+      "depends_on": [
+        "STAGE-04"
+      ],
+      "works": [
+        {
+          "id": "WORK-05-01",
+          "number": "5.1",
+          "title": "پروندهٔ خطا",
+          "type": "development",
+          "status": "PENDING",
+          "description": "گردآوری رخداد، نسخه، خروجی پالایش‌شده و اثر شکست.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-04-04"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "لاگ حساس پالایش شود.",
+            "گزارش خطا به execution و work مرتبط باشد."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-05-02",
+          "number": "5.2",
+          "title": "اصلاح محدود",
+          "type": "development",
+          "status": "PENDING",
+          "description": "طرح اصلاح با آزمون، سقف تلاش و مجوزهای لازم.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-05-01"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "تلاش اصلاح محدود و قابل توقف باشد.",
+            "شکست تکراری کار را BLOCKED کند و اثر مخرب تکرار نشود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-05-03",
+          "number": "5.3",
+          "title": "بازیابی و ادامه",
+          "type": "development",
+          "status": "PENDING",
+          "description": "بازیابی از checkpoint پس از بررسی نسخه و سلامت پیش‌نیازها.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-05-02"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "بازیابی از snapshot کهنه یا ناسازگار رد شود.",
+            "نتیجهٔ مبهم با تصمیم صریح حل شود، نه تکرار کور عملیات."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        }
+      ],
+      "completion_policy": {
+        "all_works_required": true,
+        "tests_must_pass": true,
+        "deployment_must_pass": false
+      }
+    },
+    {
+      "id": "STAGE-06",
+      "number": 6,
+      "title": "اتصال افزونه، گزارش و بهره‌برداری",
+      "status": "PLANNED",
+      "goal": "تجربهٔ قابل‌استفاده و پایدار روی قابلیت‌های آزموده‌شده فراهم شود.",
+      "depends_on": [
+        "STAGE-05"
+      ],
+      "works": [
+        {
+          "id": "WORK-06-01",
+          "number": "6.1",
+          "title": "اتصال افزونهٔ خصوصی",
+          "type": "development",
+          "status": "PENDING",
+          "description": "اتصال مهارت‌ها به MCP واقعی و آزمون ابزارها در میزبان هدف.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-05-03"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "ابزار در ChatGPT واقعاً ظاهر و یک فراخوانی مجاز موفق شود.",
+            "سورس افزونه با نصب فعال اشتباه گرفته نشود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-06-02",
+          "number": "6.2",
+          "title": "گزارش تلگرام",
+          "type": "development",
+          "status": "PENDING",
+          "description": "رویدادهای موفقیت، هشدار و خطای بحرانی با ارجاع محرمانهٔ اعتبارنامه.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-06-01"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "ارسال تنها به مقصد صریحاً تعیین‌شده انجام شود.",
+            "تلاش مجدد باعث پیام تکراری نامحدود نشود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-06-03",
+          "number": "6.3",
+          "title": "watchdog و صف",
+          "type": "operations",
+          "status": "PENDING",
+          "description": "زمان‌بندی کنترل‌شده پس از lease و اثبات idempotency.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-06-02"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "دو scheduler عملیات واحد را هم‌زمان اجرا نکنند.",
+            "watchdog حق تکرار عملیات مبهم یا پرخطر نداشته باشد."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        },
+        {
+          "id": "WORK-06-04",
+          "number": "6.4",
+          "title": "پشتیبان‌گیری و آزمون پایان‌به‌پایان",
+          "type": "testing",
+          "status": "PENDING",
+          "description": "آزمون چند پروژه و سرور، بازیابی داده و مستندات نصب.",
+          "inputs": [
+            "قراردادهای contracts/",
+            "تنظیمات ثبت‌شدهٔ پروژه"
+          ],
+          "dependencies": [
+            "WORK-06-03"
+          ],
+          "actions": [
+            "بررسی پیش‌نیازها و دامنهٔ مجاز",
+            "پیاده‌سازی و اجرای آزمون‌های پذیرش",
+            "ثبت نتیجه و checkpoint پس از تأیید"
+          ],
+          "files_expected": [],
+          "acceptance_criteria": [
+            "رجیستری و checkpoint از نسخهٔ پشتیبان واقعاً بازیابی شوند.",
+            "سناریوی تعریف پروژه تا استقرار و قطع و ادامه اجرا آزموده شود."
+          ],
+          "tests": {
+            "required": true,
+            "commands": [
+              ".venv/bin/python -m pytest -q"
+            ],
+            "health_checks": []
+          },
+          "git": {
+            "commit_required": true,
+            "push_required": false,
+            "commit_strategy": "after_work"
+          },
+          "deployment": {
+            "required": false,
+            "environment": null
+          },
+          "failure_policy": {
+            "auto_diagnose": true,
+            "auto_fix": false,
+            "max_automatic_attempts": 0,
+            "rollback_on_critical_failure": false
+          }
+        }
+      ],
+      "completion_policy": {
+        "all_works_required": true,
+        "tests_must_pass": true,
+        "deployment_must_pass": false
+      }
+    }
+  ],
+  "execution": {
+    "workflow": [
+      "بررسی سند و پیش‌نیازها",
+      "انتخاب اولین Work آماده",
+      "پیاده‌سازی در محدودهٔ مجاز",
+      "اعتبارسنجی و آزمون پذیرش",
+      "ثبت checkpoint و commit محلی",
+      "push یا استقرار فقط طبق مجوز همان مقصد و عملیات",
+      "انتخاب Work بعدی پس از اثبات نتیجه"
+    ],
+    "on_failure": [
+      "ثبت شواهد و خطا",
+      "حفظ داده و نسخهٔ معتبر پیشین",
+      "اصلاح تنها در محدودهٔ مجاز و سقف تلاش",
+      "توقف در نتیجهٔ مبهم یا نیازمند تصمیم"
+    ],
+    "continue_automatically": false,
+    "stop_conditions": [
+      "نبود پیش‌نیاز یا credential قابل resolve",
+      "تعارض نسخه یا دادهٔ خراب",
+      "نبود مجوز عملیات حساس یا مقصد انتشار",
+      "شکست آزمون پذیرش",
+      "نتیجهٔ مبهم اثر جانبی"
+    ]
+  },
+  "deliverables": [
+    "قراردادها و سورس افزونه",
+    "رجیستری و MCP stdio",
+    "چرخهٔ lease/checkpoint/resume",
+    "عامل و اتصال مجاز",
+    "اجرا و استقرار محدود",
+    "تشخیص و بازیابی",
+    "افزونه و گزارش و پشتیبان‌گیری"
+  ],
+  "risks": [
+    "کامل فرض کردن قابلیت‌ها صرفاً به‌دلیل enabled=true در تنظیمات",
+    "تکرار اثر جانبی پس از قطع اجرا",
+    "دسترسی بیش از نیاز عامل",
+    "مخلوط شدن وضعیت تاریخی Git و نسخهٔ مستقر"
+  ],
+  "decisions": [
+    {
+      "id": "DEC-01",
+      "decision": "مرورگر از دامنه خارج است.",
+      "source": "Stage 0 README"
+    },
+    {
+      "id": "DEC-02",
+      "decision": "ترتیب تفصیلی مراحل آینده یک خط مبنای پیشنهادی بر اساس NEXT و تنظیمات است؛ معادل تصویب همهٔ عملیات یا انتشار نیست."
+    },
+    {
+      "id": "DEC-03",
+      "decision": "شناسهٔ تاریخی W01-REGISTRY-MCP در سند طراحی به WORK-01-01 نگاشت می‌شود."
+    },
+    {
+      "id": "DEC-04",
+      "decision": "ادامهٔ خودکار تا پیاده‌سازی lease و حفاظت از آثار جانبی غیرفعال می‌ماند."
+    }
+  ],
+  "open_questions": [
+    {
+      "id": "Q-01",
+      "question": "میزبان و روش احراز هویت انتقال شبکهٔ MCP چیست؟",
+      "blocks_stage": "STAGE-03",
+      "blocks_current_stage": false
+    },
+    {
+      "id": "Q-02",
+      "question": "backend واقعی Vault و روش تأمین هویت عامل چیست؟",
+      "blocks_stage": "STAGE-03",
+      "blocks_current_stage": false
+    },
+    {
+      "id": "Q-03",
+      "question": "مقصد مجاز گزارش تلگرام و دامنهٔ انتشار Git کدام‌اند؟",
+      "blocks_stage": "STAGE-06",
+      "blocks_current_stage": false
+    }
+  ],
+  "validation": {
+    "design_status": "READY_WITH_AUTOFIXES",
+    "ready_for_execution": true,
+    "works_with_acceptance_criteria_percent": 100,
+    "blocking_questions": []
+  }
+}

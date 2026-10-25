@@ -1,10 +1,15 @@
 # Next
 
-1. Run `bash scripts/bootstrap-stage1.sh` on `/opt/devflow` using the Stage 1 branch.
-2. Inspect unit-test, registry validation and real MCP smoke output before marking Stage 1 complete.
-3. Create the canonical project design and reconcile recorded state with observed server state.
-4. Implement execution leases and the checkpoint lifecycle before autonomous jobs or watchdogs.
-5. Design Vault/remote-agent authorization and authenticated MCP transport before network exposure.
-6. Connect/install the private DevFlow Plugin when Plugin Creator connectivity is available.
+1. Apply the canonical-design patch and run `bash scripts/finalize-stage1.sh`.
+2. Commit the verified design, status-reader changes and refreshed evidence locally.
+3. Start Stage 2: state transitions, execution leases with fencing, checkpoint lifecycle,
+   resume bundles and interrupted-execution tests, following `project.design.json`.
+4. Resolve identity, actual secret backend and authorized transport before Stage 3
+   exposes any network service or enables a remote agent.
+5. Complete controlled execution and recovery before enabling watchdog jobs.
+6. Connect/install the private plugin and enable reporting only when prerequisites
+   and destinations are established.
 
-Already done: GitHub repository binding, Stage 0 commit/push and control-server address binding.
+Already verified by operator output: Stage 0 commit/push and server binding;
+Stage 1 server bootstrap, 21 source tests, registry validation and real stdio MCP
+handshake, discovery and calls. Operator Stage 1 commit: cfc0d42.
