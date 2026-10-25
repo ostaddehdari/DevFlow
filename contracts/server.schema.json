@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devflow.local/schemas/server.schema.json",
+  "title": "DevFlow Server",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "server_id",
+    "address",
+    "connection",
+    "os"
+  ],
+  "properties": {
+    "server_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9._-]+$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "address": {
+      "type": "string",
+      "minLength": 1,
+      "description": "IP address or resolvable host used by DevFlow."
+    },
+    "hostname": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "role": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "environment": {
+      "enum": [
+        "development",
+        "staging",
+        "production",
+        "shared"
+      ]
+    },
+    "connection": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "protocol",
+        "port",
+        "username",
+        "credential_ref"
+      ],
+      "properties": {
+        "protocol": {
+          "enum": [
+            "ssh",
+            "winrm",
+            "agent"
+          ]
+        },
+        "port": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 65535
+        },
+        "username": {
+          "type": "string",
+          "minLength": 1
+        },
+        "credential_ref": {
+          "type": "string",
+          "minLength": 1,
+          "pattern": "^(vault|secret|env)://"
+        }
+      }
+    },
+    "os": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_root": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "public_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri"
+    },
+    "health_url": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uri"
+    },
+    "agent": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "endpoint": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "uri"
+        },
+        "status": {
+          "enum": [
+            "unknown",
+            "connected",
+            "disconnected",
+            "not_installed"
+          ]
+        }
+      }
+    },
+    "capabilities": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "shell",
+          "filesystem",
+          "git",
+          "docker",
+          "systemd",
+          "nginx",
+          "postgresql",
+          "mysql",
+          "redis",
+          "node",
+          "python",
+          "php",
+          "network",
+          "backup",
+          "windows_services",
+          "iis"
+        ]
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true
+    }
+  }
+}

@@ -1,0 +1,27 @@
+{
+  "schema_version": "1.0",
+  "project_id": "devflow",
+  "generated_at": "2026-10-25T11:50:00+03:30",
+  "current": {
+    "stage_id": "STAGE-01",
+    "work_id": null,
+    "status": "PLANNED"
+  },
+  "git": {
+    "branch": "main",
+    "head_sha": null
+  },
+  "servers": {
+    "control": {
+      "server_id": "devflow-control-server",
+      "deployed_sha": null,
+      "health": "UNKNOWN"
+    }
+  },
+  "current_error": null,
+  "last_action": "stage0_contracts_created",
+  "next_action": "bind_github_and_control_server",
+  "do_not_repeat": [],
+  "latest_checkpoint_id": "CP-BOOTSTRAP",
+  "human_decision_required": false
+}

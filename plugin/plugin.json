@@ -1,0 +1,28 @@
+{
+  "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
+  "name": "devflow",
+  "version": "0.1.0",
+  "description": "DevFlow manages AI-assisted project design, migration, execution, recovery, continuity, and audit workflows.",
+  "author": {
+    "name": "DevFlow"
+  },
+  "extensions": {
+    "com.openai": {
+      "interface": {
+        "displayName": "DevFlow",
+        "shortDescription": "AI project execution",
+        "longDescription": "Design, migrate, execute, resume, audit, debug, and recover software projects using persistent project state and external tools.",
+        "developerName": "DevFlow",
+        "category": "Productivity",
+        "capabilities": [
+          "Interactive"
+        ],
+        "defaultPrompt": [
+          "Design this project with DevFlow.",
+          "Migrate this existing project into DevFlow.",
+          "Resume this DevFlow project from its latest checkpoint."
+        ]
+      }
+    }
+  }
+}

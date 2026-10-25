@@ -1,0 +1,101 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devflow.local/schemas/checkpoint.schema.json",
+  "title": "DevFlow Checkpoint",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "checkpoint_id",
+    "project_id",
+    "created_at",
+    "reason",
+    "snapshot",
+    "safe_to_resume"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "checkpoint_id": {
+      "type": "string",
+      "pattern": "^CP-[A-Za-z0-9._-]+$"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "created_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "reason": {
+      "enum": [
+        "work_started",
+        "code_milestone",
+        "commit",
+        "push",
+        "deployment",
+        "migration",
+        "error",
+        "fix",
+        "rollback",
+        "work_completed",
+        "stage_completed",
+        "manual"
+      ]
+    },
+    "safe_to_resume": {
+      "type": "boolean"
+    },
+    "snapshot": {
+      "type": "object",
+      "additionalProperties": true,
+      "required": [
+        "stage_id",
+        "work_id",
+        "git_head_sha"
+      ],
+      "properties": {
+        "stage_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "work_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "git_head_sha": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "server_deployments": {
+          "type": "object"
+        },
+        "last_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "next_action": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "do_not_repeat": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

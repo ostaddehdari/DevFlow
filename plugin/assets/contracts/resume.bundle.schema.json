@@ -1,0 +1,115 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devflow.local/schemas/resume.bundle.schema.json",
+  "title": "DevFlow Resume Bundle",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "generated_at",
+    "current",
+    "git",
+    "servers",
+    "last_action",
+    "next_action",
+    "do_not_repeat"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "project_id": {
+      "type": "string"
+    },
+    "generated_at": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "current": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage_id",
+        "work_id",
+        "status"
+      ],
+      "properties": {
+        "stage_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "work_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "status": {
+          "type": "string"
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch",
+        "head_sha"
+      ],
+      "properties": {
+        "branch": {
+          "type": "string"
+        },
+        "head_sha": {
+          "type": [
+            "string",
+            "null"
+          ]
+        }
+      }
+    },
+    "servers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object"
+      }
+    },
+    "current_error": {
+      "type": [
+        "object",
+        "null"
+      ]
+    },
+    "last_action": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "next_action": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "do_not_repeat": {
+      "type": "array",
+      "uniqueItems": true,
+      "items": {
+        "type": "string"
+      }
+    },
+    "latest_checkpoint_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "human_decision_required": {
+      "type": "boolean"
+    }
+  }
+}

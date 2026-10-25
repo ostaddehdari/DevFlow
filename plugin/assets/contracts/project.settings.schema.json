@@ -1,0 +1,223 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devflow.local/schemas/project.settings.schema.json",
+  "title": "DevFlow Project Settings",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project",
+    "repository",
+    "servers",
+    "continuity",
+    "security"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "project": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "id",
+        "name",
+        "status"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "pattern": "^[a-z0-9][a-z0-9._-]*$"
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "description": {
+          "type": "string"
+        },
+        "status": {
+          "enum": [
+            "PLANNED",
+            "ACTIVE",
+            "PAUSED",
+            "BLOCKED",
+            "COMPLETED",
+            "ARCHIVED"
+          ]
+        }
+      }
+    },
+    "repository": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "provider",
+        "owner",
+        "name",
+        "default_branch"
+      ],
+      "properties": {
+        "provider": {
+          "const": "github"
+        },
+        "owner": {
+          "type": "string",
+          "minLength": 1
+        },
+        "name": {
+          "type": "string",
+          "minLength": 1
+        },
+        "default_branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "branch_strategy": {
+          "enum": [
+            "direct",
+            "stage",
+            "feature",
+            "gitflow"
+          ]
+        }
+      }
+    },
+    "servers": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "$ref": "server.schema.json"
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "docker": {
+          "type": "boolean"
+        },
+        "nginx": {
+          "type": "boolean"
+        },
+        "systemd": {
+          "type": "boolean"
+        },
+        "postgresql": {
+          "type": "boolean"
+        },
+        "mysql": {
+          "type": "boolean"
+        },
+        "redis": {
+          "type": "boolean"
+        },
+        "node": {
+          "type": "boolean"
+        },
+        "python": {
+          "type": "boolean"
+        },
+        "php": {
+          "type": "boolean"
+        }
+      }
+    },
+    "telegram": {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "topic": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "levels": {
+          "type": "array",
+          "uniqueItems": true,
+          "items": {
+            "enum": [
+              "INFO",
+              "SUCCESS",
+              "WARNING",
+              "CRITICAL"
+            ]
+          }
+        },
+        "credential_ref": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "pattern": "^(vault|secret|env)://"
+        }
+      }
+    },
+    "continuity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "enabled",
+        "checkpoint_enabled",
+        "execution_lease_enabled",
+        "scheduled_watchdog_enabled"
+      ],
+      "properties": {
+        "enabled": {
+          "type": "boolean"
+        },
+        "checkpoint_enabled": {
+          "type": "boolean"
+        },
+        "execution_lease_enabled": {
+          "type": "boolean"
+        },
+        "scheduled_watchdog_enabled": {
+          "type": "boolean"
+        },
+        "resume_policy": {
+          "enum": [
+            "latest_safe_checkpoint",
+            "latest_checkpoint",
+            "manual"
+          ]
+        },
+        "lease_seconds": {
+          "type": "integer",
+          "minimum": 60,
+          "maximum": 86400
+        }
+      }
+    },
+    "security": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "secret_storage",
+        "critical_actions_require_approval"
+      ],
+      "properties": {
+        "secret_storage": {
+          "enum": [
+            "external_vault",
+            "servermaster_vault",
+            "environment_refs"
+          ]
+        },
+        "critical_actions_require_approval": {
+          "type": "boolean"
+        },
+        "allow_force_push": {
+          "type": "boolean"
+        },
+        "allow_destructive_db_actions": {
+          "type": "boolean"
+        }
+      }
+    }
+  }
+}

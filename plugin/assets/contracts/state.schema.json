@@ -1,0 +1,200 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devflow.local/schemas/state.schema.json",
+  "title": "DevFlow Project State",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "project_id",
+    "project_status",
+    "current",
+    "git",
+    "servers",
+    "updated_at"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_status": {
+      "enum": [
+        "PLANNED",
+        "ACTIVE",
+        "PAUSED",
+        "BLOCKED",
+        "COMPLETED",
+        "ARCHIVED"
+      ]
+    },
+    "current": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "stage_id",
+        "work_id",
+        "work_status",
+        "operation",
+        "step"
+      ],
+      "properties": {
+        "stage_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "stage_status": {
+          "anyOf": [
+            {
+              "enum": [
+                "PLANNED",
+                "ACTIVE",
+                "VERIFYING",
+                "FAILED",
+                "COMPLETED"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "work_id": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "work_status": {
+          "anyOf": [
+            {
+              "enum": [
+                "PENDING",
+                "RUNNING",
+                "TESTING",
+                "COMMITTING",
+                "DEPLOYING",
+                "VERIFYING",
+                "FAILED",
+                "COMPLETED"
+              ]
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "operation": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "step": {
+          "type": [
+            "string",
+            "null"
+          ]
+        },
+        "attempt": {
+          "type": "integer",
+          "minimum": 0
+        }
+      }
+    },
+    "git": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "branch",
+        "head_sha"
+      ],
+      "properties": {
+        "branch": {
+          "type": "string",
+          "minLength": 1
+        },
+        "head_sha": {
+          "type": "string",
+          "minLength": 7
+        }
+      }
+    },
+    "servers": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "server_id",
+          "deployed_sha",
+          "health"
+        ],
+        "properties": {
+          "server_id": {
+            "type": "string"
+          },
+          "deployed_sha": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "health": {
+            "enum": [
+              "UNKNOWN",
+              "HEALTHY",
+              "DEGRADED",
+              "UNHEALTHY",
+              "OFFLINE"
+            ]
+          },
+          "last_verified_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "active_error_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "latest_checkpoint_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "next_action": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "execution": {
+      "anyOf": [
+        {
+          "$ref": "execution.schema.json"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "updated_at": {
+      "type": "string",
+      "format": "date-time"
+    }
+  }
+}

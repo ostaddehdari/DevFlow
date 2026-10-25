@@ -1,0 +1,88 @@
+{
+  "schema_version": "1.0",
+  "project": {
+    "id": "devflow",
+    "name": "DevFlow",
+    "description": "AI Development, Deployment & Continuity Platform",
+    "status": "ACTIVE"
+  },
+  "repository": {
+    "provider": "github",
+    "owner": "ostaddehdari",
+    "name": "DevFlow",
+    "default_branch": "main",
+    "branch_strategy": "stage"
+  },
+  "servers": {
+    "control": {
+      "server_id": "devflow-control-server",
+      "name": "DevFlow Control Server",
+      "address": "5.61.27.185",
+      "hostname": null,
+      "role": "control",
+      "environment": "production",
+      "connection": {
+        "protocol": "ssh",
+        "port": 2233,
+        "username": "root",
+        "credential_ref": "vault://servers/devflow-control-server/root"
+      },
+      "os": "ubuntu-24.04",
+      "project_root": "/opt/devflow",
+      "public_url": null,
+      "health_url": null,
+      "agent": {
+        "enabled": false,
+        "endpoint": null,
+        "status": "not_installed"
+      },
+      "capabilities": [
+        "shell",
+        "filesystem",
+        "git",
+        "docker",
+        "systemd",
+        "nginx",
+        "postgresql",
+        "redis",
+        "network"
+      ],
+      "metadata": {}
+    }
+  },
+  "runtime": {
+    "docker": true,
+    "nginx": true,
+    "systemd": true,
+    "postgresql": true,
+    "mysql": false,
+    "redis": true,
+    "node": true,
+    "python": true,
+    "php": false
+  },
+  "telegram": {
+    "enabled": true,
+    "topic": "DevFlow",
+    "levels": [
+      "SUCCESS",
+      "WARNING",
+      "CRITICAL"
+    ],
+    "credential_ref": "vault://telegram/devflow-reporter"
+  },
+  "continuity": {
+    "enabled": true,
+    "checkpoint_enabled": true,
+    "execution_lease_enabled": true,
+    "scheduled_watchdog_enabled": true,
+    "resume_policy": "latest_safe_checkpoint",
+    "lease_seconds": 600
+  },
+  "security": {
+    "secret_storage": "servermaster_vault",
+    "critical_actions_require_approval": true,
+    "allow_force_push": false,
+    "allow_destructive_db_actions": false
+  }
+}

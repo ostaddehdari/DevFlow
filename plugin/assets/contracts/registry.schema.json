@@ -1,0 +1,71 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devflow.local/schemas/registry.schema.json",
+  "title": "DevFlow Project Registry",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "projects",
+    "servers"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "active_project_id": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "projects": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "project_id",
+          "repository",
+          "status",
+          "settings_path"
+        ],
+        "properties": {
+          "project_id": {
+            "type": "string"
+          },
+          "repository": {
+            "type": "string",
+            "pattern": "^[^/]+/[^/]+$"
+          },
+          "status": {
+            "enum": [
+              "PLANNED",
+              "ACTIVE",
+              "PAUSED",
+              "BLOCKED",
+              "COMPLETED",
+              "ARCHIVED"
+            ]
+          },
+          "settings_path": {
+            "type": "string"
+          },
+          "last_activity_at": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "date-time"
+          }
+        }
+      }
+    },
+    "servers": {
+      "type": "array",
+      "items": {
+        "$ref": "server.schema.json"
+      }
+    }
+  }
+}
