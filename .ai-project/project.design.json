@@ -93,9 +93,10 @@
       "registry_servers",
       "registry_validate",
       "project_status",
-      "continuity_status"
+      "continuity_status",
+      "security_status"
     ],
-    "execution_readiness_scope": "STAGE-03 identity and authorization design; resolve transport and secret backend prerequisites before network exposure.",
+    "execution_readiness_scope": "STAGE-03 remote-agent and authenticated-transport configuration; public endpoint and OAuth provider still unresolved.",
     "status_sources": {
       "stage0": "user-provided Git push output for c76c386",
       "stage1": "user-provided server bootstrap: 21 passed, registry ok, real MCP smoke passed; commit cfc0d427ace44210b3fc678c43215c01439122be"
@@ -103,7 +104,12 @@
     "settings_flags_are_declarations": true,
     "live_health_verified": false,
     "continuity_storage": ".devflow/continuity.sqlite3",
-    "external_effect_runner": false
+    "external_effect_runner": false,
+    "local_identity_backend": "project_scoped_revocable_credentials",
+    "vault_backend": "servermaster_local_fernet",
+    "master_keys_outside_repository": true,
+    "network_authentication": false,
+    "remote_agent": false
   },
   "stages": [
     {
@@ -489,7 +495,7 @@
       "id": "STAGE-03",
       "number": 3,
       "title": "هویت، اسرار و اتصال مجاز",
-      "status": "PLANNED",
+      "status": "ACTIVE",
       "goal": "اتصال راه دور تنها پس از تعیین دامنهٔ دسترسی فراهم شود.",
       "depends_on": [
         "STAGE-02"
@@ -500,7 +506,7 @@
           "number": "3.1",
           "title": "هویت کنترل و عامل",
           "type": "development",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "تعریف هویت هر کنترل‌سرور، عامل، پروژه و کاربر و نگاشت مجوزها.",
           "inputs": [
             "قراردادهای contracts/",
@@ -546,7 +552,7 @@
           "number": "3.2",
           "title": "مدیریت اسرار",
           "type": "security",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "انتخاب و پیاده‌سازی backend واقعی برای credential_ref بدون قرار دادن اسرار در Git.",
           "inputs": [
             "قراردادهای contracts/",
@@ -1315,18 +1321,16 @@
     {
       "id": "DEC-04",
       "decision": "ادامهٔ خودکار تا پیاده‌سازی lease و حفاظت از آثار جانبی غیرفعال می‌ماند."
+    },
+    {
+      "id": "DEC-05",
+      "decision": "ServerMaster Vault uses authenticated Fernet encryption with master keys outside Git. Local credentials are application-scoped and revocable; they are not OAuth tokens for a public MCP endpoint."
     }
   ],
   "open_questions": [
     {
       "id": "Q-01",
       "question": "میزبان و روش احراز هویت انتقال شبکهٔ MCP چیست؟",
-      "blocks_stage": "STAGE-03",
-      "blocks_current_stage": false
-    },
-    {
-      "id": "Q-02",
-      "question": "backend واقعی Vault و روش تأمین هویت عامل چیست؟",
       "blocks_stage": "STAGE-03",
       "blocks_current_stage": false
     },

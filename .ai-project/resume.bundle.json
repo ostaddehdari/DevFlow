@@ -1,15 +1,15 @@
 {
   "schema_version": "1.0",
   "project_id": "devflow",
-  "generated_at": "2026-10-25T16:51:45.684712+00:00",
+  "generated_at": "2026-10-25T17:13:43.124734+00:00",
   "current": {
-    "stage_id": "STAGE-02",
-    "work_id": "WORK-02-05",
-    "status": "COMPLETED"
+    "stage_id": "STAGE-03",
+    "work_id": "WORK-03-02",
+    "status": "ACTIVE"
   },
   "git": {
-    "branch": "stage/02-continuity",
-    "head_sha": "2e97e4d57a0c6bdb683767b0c6dcf39241b242bf"
+    "branch": "stage/03a-identity-vault",
+    "head_sha": "a3b027c487f9a6c729f5d6a1e894ea93e0d82358"
   },
   "servers": {
     "control": {
@@ -19,8 +19,8 @@
     }
   },
   "current_error": null,
-  "last_action": "stage2_local_continuity_verified",
-  "next_action": "resolve_stage3_identity_and_transport",
+  "last_action": "stage3a_local_identity_and_vault_verified",
+  "next_action": "configure_stage3_remote_agent_and_authenticated_transport",
   "do_not_repeat": [
     "create_github_repository",
     "commit_stage0",
@@ -28,8 +28,9 @@
     "bind_control_server_address",
     "run_stage1_bootstrap_on_control_server",
     "install_stage1",
-    "implement_stage2_execution_leases"
+    "implement_stage2_execution_leases",
+    "implement_local_identity_and_encrypted_vault"
   ],
-  "latest_checkpoint_id": "CP-STAGE02-VERIFIED",
+  "latest_checkpoint_id": "CP-STAGE03A-VERIFIED",
   "human_decision_required": false
 }

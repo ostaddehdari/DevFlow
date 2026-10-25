@@ -24,7 +24,28 @@ def main() -> int:
     status.add_argument("--project", default=None)
     activate = sub.add_parser("activate")
     activate.add_argument("project_id")
-    sub.add_parser("serve")
+    serve = sub.add_parser("serve")
+    serve.add_argument("--credential-file", type=Path, default=None)
+    security = sub.add_parser("security")
+    security_commands = security.add_subparsers(dest="security_command", required=True)
+    for name in ("init", "status", "principal-create", "issue", "revoke", "disable", "vault-put", "vault-list", "vault-rotate"):
+        command = security_commands.add_parser(name)
+        if name == "init":
+            command.add_argument("--key-dir", type=Path, required=True)
+        if name in {"principal-create", "issue", "disable"}:
+            command.add_argument("--principal-id", required=True)
+        if name == "principal-create":
+            command.add_argument("--role", choices=["viewer", "operator", "agent"], required=True)
+            command.add_argument("--project", action="append", dest="projects", required=True)
+            command.add_argument("--vault-ref", action="append", default=[])
+        if name == "issue":
+            command.add_argument("--seconds", type=int, default=3600)
+        if name == "revoke":
+            command.add_argument("--credential-id", required=True)
+        if name == "vault-put":
+            command.add_argument("--reference", required=True)
+            command.add_argument("--project", required=True)
+            command.add_argument("--from-stdin", action="store_true")
     continuity = sub.add_parser("continuity")
     commands = continuity.add_subparsers(dest="continuity_command", required=True)
     names = ("init", "status", "resume", "lease-acquire", "lease-renew", "lease-release",
@@ -56,7 +77,41 @@ def main() -> int:
             args.registry or root / "control" / "registry.json",
             Contracts(args.contracts or root / "contracts"),
         )
-        if args.command == "continuity":
+        if args.command == "security":
+            from .security import SecurityStore
+            store = SecurityStore(root, registry.contracts)
+            name = args.security_command
+            known_projects = {p["project_id"] for p in registry.read()["projects"]}
+            if name == "init":
+                result = store.initialize(args.key_dir)
+            elif name == "status":
+                result = store.status()
+            elif name == "principal-create":
+                if not set(args.projects).issubset(known_projects):
+                    raise DevFlowError("Unknown project grant")
+                result = store.create_principal(args.principal_id, args.role, args.projects, args.vault_ref)
+            elif name == "issue":
+                result = store.issue(args.principal_id, args.seconds)
+            elif name == "revoke":
+                result = store.revoke(args.credential_id)
+            elif name == "disable":
+                result = store.disable(args.principal_id)
+            elif name == "vault-list":
+                result = store.references()
+            elif name == "vault-rotate":
+                result = store.rotate_key()
+            else:
+                if args.project not in known_projects:
+                    raise DevFlowError("Unknown vault project binding")
+                if args.from_stdin:
+                    value = sys.stdin.buffer.read(1048577)
+                else:
+                    if not sys.stdin.isatty():
+                        raise DevFlowError("Use --from-stdin for a controlled secret input stream")
+                    import getpass
+                    value = getpass.getpass("Secret value (hidden): ").encode()
+                result = store.put(args.reference, args.project, value)
+        elif args.command == "continuity":
             from .continuity import from_registry
             store = from_registry(registry, args.project)
             name = args.continuity_command
@@ -107,7 +162,12 @@ def main() -> int:
             # Fail before starting MCP if registry initialization has not succeeded.
             registry.read()
             from .server import build_server
-            build_server(registry).run(transport="stdio")
+            gate = None
+            if args.credential_file is not None:
+                from .security import CredentialGate, SecurityStore
+                gate = CredentialGate(SecurityStore(root, registry.contracts), args.credential_file)
+                gate.principal()  # Fail before protocol startup for an invalid credential.
+            build_server(registry, gate, root).run(transport="stdio")
             return 0
         print(json.dumps(result, ensure_ascii=False, indent=2))
         return 0

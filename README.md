@@ -6,7 +6,8 @@ AI Development, Deployment & Continuity Platform.
 
 - Stage 0: قراردادهای JSON و سورس افزونهٔ مهارت‌ها ثبت شده‌اند.
 - Stage 1: رجیستری کنترل و ServerMaster MCP با انتقال `stdio` روی سرور تأیید شده‌اند.
-- Stage 2: lease، دفتر عملیات و checkpoint/resume محلی پیاده‌سازی شده‌اند؛ تأیید نصب با اسکریپت Stage 2 انجام می‌شود.
+- Stage 2: lease، دفتر عملیات و checkpoint/resume محلی روی سرور تأیید شده‌اند.
+- Stage 3A: هویت و مجوز پروژه، ابطال اعتبارنامه و Vault رمزگذاری‌شده پیاده‌سازی شده‌اند؛ نصب با اسکریپت Stage 3A تأیید می‌شود.
 - نصب و تأیید روی سرور کنترل باید با دستور زیر انجام شود؛ وجود سورس به معنی استقرار نیست.
 
 ## نصب و بررسی
@@ -44,6 +45,7 @@ bash scripts/devflow status
 | `registry_validate` | اعتبارسنجی قرارداد، شناسه‌های یکتا و پروژهٔ فعال |
 | `project_status` | وضعیت ثبت‌شده، HEAD محلی Git و کمبود اسناد تداوم |
 | `continuity_status` | مالک lease، عملیات حل‌نشده و آخرین checkpoint محلی |
+| `security_status` | وضعیت محلی هویت و Vault، بدون نمایش اسرار |
 
 برای اجرا با یک کلاینت محلی MCP، نمونهٔ تنظیمات در `examples/mcp.local.json` است.
 اجرای `bash scripts/devflow serve` منتظر ورودی پروتکل روی stdin می‌ماند؛
@@ -57,9 +59,23 @@ bash scripts/devflow status
 یک checkpoint اجرایی می‌سازد. جزئیات، محدودیت‌ها و فرمان‌ها در
 [docs/STAGE-02.md](docs/STAGE-02.md) آمده‌اند.
 
+## هویت و Vault محلی
+
+پس از نصب patch:
+
+```bash
+bash scripts/verify-stage3a.sh /etc/devflow/keys
+bash scripts/devflow security status
+```
+
+کلید اصلی خارج از مخزن است. اسرار واقعی تا ورود صریح شما ذخیره نمی‌شوند.
+حالت `serve --credential-file PATH` دسترسی stdio را برای پروژه‌های مجاز محدود می‌کند؛
+`serve` معمولی برای فرایند محلیِ مورداعتماد باقی می‌ماند. اتصال شبکه و OAuth هنوز
+پیاده‌سازی نشده‌اند. جزئیات در [docs/STAGE-03A.md](docs/STAGE-03A.md) آمده است.
+
 ## حدود این مرحله
 
 مرورگر جزو این پروژه نیست. Stage 1 پورت شبکه، Nginx، systemd، SSH، دیتابیس یا cron را
-تغییر نمی‌دهد. اجرای فرمان روی سرور، agent، Vault، watchdog، گزارش
+تغییر نمی‌دهد. اجرای فرمان روی سرور، agent، watchdog، گزارش
 تلگرام و اتصال خصوصی افزونه هنوز پیاده‌سازی یا فعال نشده‌اند؛ حتی اگر در تنظیمات درخواست شده باشند.
 اسرار باید خارج از Git بمانند و با `vault://...` یا ارجاع‌های مجاز قرارداد معرفی شوند.
