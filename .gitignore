@@ -15,3 +15,14 @@ __pycache__/
 # Dependencies and logs
 node_modules/
 *.log
+
+# Local control-plane data
+.devflow/
+*.egg-info/
+build/
+dist/
+
+# Host-specific registry and lock
+/control/registry.json
+/control/registry.json.lock
+/control/.registry-*

@@ -4,16 +4,16 @@
   "project_status": "ACTIVE",
   "current": {
     "stage_id": "STAGE-01",
-    "stage_status": "PLANNED",
-    "work_id": null,
-    "work_status": null,
-    "operation": "bootstrap_repository",
-    "step": "awaiting_github_and_server_binding",
-    "attempt": 0
+    "stage_status": "COMPLETED",
+    "work_id": "W01-REGISTRY-MCP",
+    "work_status": "COMPLETED",
+    "operation": "stage1_bootstrap",
+    "step": "server_bootstrap_verified",
+    "attempt": 1
   },
   "git": {
-    "branch": "main",
-    "head_sha": "0000000"
+    "branch": "stage/01-servermaster-core",
+    "head_sha": "c76c38617461645526c22496de9c60266270d556"
   },
   "servers": {
     "control": {
@@ -24,8 +24,8 @@
     }
   },
   "active_error_id": null,
-  "latest_checkpoint_id": "CP-BOOTSTRAP",
-  "next_action": "bind_github_and_control_server",
+  "latest_checkpoint_id": "CP-STAGE01-SOURCE",
+  "next_action": "create_project_design",
   "execution": null,
-  "updated_at": "2026-10-25T11:50:00+03:30"
+  "updated_at": "2026-10-25T15:46:29.417964+00:00"
 }

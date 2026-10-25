@@ -1,0 +1,23 @@
+{
+  "schema_version": "1.0",
+  "checkpoint_id": "CP-STAGE01-SOURCE",
+  "project_id": "devflow",
+  "created_at": "2026-10-25T15:02:31.713178+00:00",
+  "reason": "code_milestone",
+  "safe_to_resume": true,
+  "snapshot": {
+    "stage_id": "STAGE-01",
+    "work_id": "W01-REGISTRY-MCP",
+    "git_head_sha": "c76c38617461645526c22496de9c60266270d556",
+    "server_deployments": {},
+    "last_action": "stage1_source_prepared",
+    "next_action": "run_stage1_bootstrap_on_control_server",
+    "note": "Git SHA is the observed Stage 0 base before the Stage 1 commit. Source verification is local only; production bootstrap, live health, leases and plugin connection remain unverified."
+  },
+  "do_not_repeat": [
+    "create_github_repository",
+    "commit_stage0",
+    "push_stage0",
+    "bind_control_server_address"
+  ]
+}

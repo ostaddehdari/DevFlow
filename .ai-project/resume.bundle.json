@@ -1,15 +1,15 @@
 {
   "schema_version": "1.0",
   "project_id": "devflow",
-  "generated_at": "2026-10-25T11:50:00+03:30",
+  "generated_at": "2026-10-25T15:46:29.417964+00:00",
   "current": {
     "stage_id": "STAGE-01",
-    "work_id": null,
-    "status": "PLANNED"
+    "work_id": "W01-REGISTRY-MCP",
+    "status": "COMPLETED"
   },
   "git": {
-    "branch": "main",
-    "head_sha": null
+    "branch": "stage/01-servermaster-core",
+    "head_sha": "c76c38617461645526c22496de9c60266270d556"
   },
   "servers": {
     "control": {
@@ -19,9 +19,14 @@
     }
   },
   "current_error": null,
-  "last_action": "stage0_contracts_created",
-  "next_action": "bind_github_and_control_server",
-  "do_not_repeat": [],
-  "latest_checkpoint_id": "CP-BOOTSTRAP",
+  "last_action": "stage1_server_bootstrap_verified",
+  "next_action": "create_project_design",
+  "do_not_repeat": [
+    "create_github_repository",
+    "commit_stage0",
+    "push_stage0",
+    "bind_control_server_address"
+  ],
+  "latest_checkpoint_id": "CP-STAGE01-SOURCE",
   "human_decision_required": false
 }

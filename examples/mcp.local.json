@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "devflow-servermaster": {
+      "command": "bash",
+      "args": ["/opt/devflow/scripts/devflow", "serve"]
+    }
+  }
+}
