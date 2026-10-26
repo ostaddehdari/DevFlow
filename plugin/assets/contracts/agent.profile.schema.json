@@ -1,0 +1,94 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devflow.local/schemas/agent.profile.schema.json",
+  "title": "DevFlow Restricted Local Agent Profile",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schema_version",
+    "agent_id",
+    "server_id",
+    "project_id",
+    "project_root",
+    "principal_id",
+    "run_uid",
+    "run_gid",
+    "allowed_paths",
+    "capabilities",
+    "credential_id",
+    "credential_sha256",
+    "expires_at_epoch",
+    "enabled"
+  ],
+  "properties": {
+    "schema_version": {
+      "const": "1.0"
+    },
+    "agent_id": {
+      "type": "string",
+      "pattern": "^[a-zA-Z0-9][a-zA-Z0-9._-]{0,79}$"
+    },
+    "server_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "project_root": {
+      "type": "string",
+      "pattern": "^/"
+    },
+    "principal_id": {
+      "type": "string",
+      "minLength": 1
+    },
+    "run_uid": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "run_gid": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "allowed_paths": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "type": "string",
+        "minLength": 1,
+        "maxLength": 1024
+      },
+      "maxItems": 32
+    },
+    "capabilities": {
+      "type": "array",
+      "minItems": 1,
+      "uniqueItems": true,
+      "items": {
+        "enum": [
+          "system.info",
+          "filesystem.list",
+          "filesystem.read"
+        ]
+      }
+    },
+    "credential_id": {
+      "type": "string",
+      "pattern": "^C-[0-9a-f]{32}$"
+    },
+    "credential_sha256": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "expires_at_epoch": {
+      "type": "number",
+      "minimum": 0
+    },
+    "enabled": {
+      "type": "boolean"
+    }
+  }
+}

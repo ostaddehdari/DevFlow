@@ -94,9 +94,10 @@
       "registry_validate",
       "project_status",
       "continuity_status",
-      "security_status"
+      "security_status",
+      "agent_inventory"
     ],
-    "execution_readiness_scope": "STAGE-03 remote-agent and authenticated-transport configuration; public endpoint and OAuth provider still unresolved.",
+    "execution_readiness_scope": "WORK-03-04 authenticated HTTPS MCP transport; public resource URI and OAuth provider remain unresolved.",
     "status_sources": {
       "stage0": "user-provided Git push output for c76c386",
       "stage1": "user-provided server bootstrap: 21 passed, registry ok, real MCP smoke passed; commit cfc0d427ace44210b3fc678c43215c01439122be"
@@ -109,7 +110,15 @@
     "vault_backend": "servermaster_local_fernet",
     "master_keys_outside_repository": true,
     "network_authentication": false,
-    "remote_agent": false
+    "remote_agent": false,
+    "local_restricted_agent": true,
+    "local_agent_uid": 984,
+    "local_agent_transport": "stdio",
+    "local_agent_capabilities": [
+      "filesystem.list",
+      "filesystem.read",
+      "system.info"
+    ]
   },
   "stages": [
     {
@@ -599,7 +608,7 @@
           "number": "3.3",
           "title": "عامل محدود سرور",
           "type": "infrastructure",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "ثبت و ابطال عامل با فهرست قابلیت‌ها و دامنهٔ مسیر مجاز.",
           "inputs": [
             "قراردادهای contracts/",

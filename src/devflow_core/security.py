@@ -340,12 +340,20 @@ class SecurityStore:
     def revoke(self, credential_id):
         if not isinstance(credential_id, str) or not re.fullmatch(r'C-[0-9a-f]{32}', credential_id):
             raise DevFlowError('Expected a credential ID, never a credential value')
+        from .agents import revoke_bindings
+        revoke_bindings(self.root, self.contracts, credential_id=credential_id)
+        return self._revoke_local(credential_id)
+
+    def _revoke_local(self, credential_id):
+        # Enrollment cleanup already holds the agent lock and disables the profile.
         with self._connection(write=True) as connection:
             changed = connection.execute('UPDATE credentials SET revoked=? WHERE credential_id=? AND revoked IS NULL', (self._now(), credential_id)).rowcount
             self._audit(connection, 'credential.revoked', {'credential_id': credential_id})
         return {'ok': True, 'changed': bool(changed)}
 
     def disable(self, principal_id):
+        from .agents import revoke_bindings
+        revoke_bindings(self.root, self.contracts, principal_id=principal_id)
         with self._connection(write=True) as connection:
             changed = connection.execute('UPDATE principals SET disabled=1 WHERE principal_id=? AND disabled=0', (principal_id,)).rowcount
             connection.execute('UPDATE credentials SET revoked=? WHERE principal_id=? AND revoked IS NULL', (self._now(), principal_id))

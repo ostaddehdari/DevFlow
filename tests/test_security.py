@@ -258,7 +258,7 @@ async def scoped_mcp_check(root, contracts, registry_path, credential_file, stor
         async with ClientSession(read, write, read_timeout_seconds=timedelta(seconds=15)) as session:
             await session.initialize()
             listed = await session.list_tools()
-            assert len(listed.tools) == 7
+            assert len(listed.tools) == 8
             projects = await session.call_tool('registry_projects', {})
             assert not projects.isError
             body = json.loads(projects.content[0].text)

@@ -1,3 +1,3 @@
-"""DevFlow Stage 3A control plane."""
+"""DevFlow Stage 3B control plane."""
 
-__version__ = "0.3.0a1"
+__version__ = "0.3.0a2"

@@ -1,0 +1,30 @@
+{
+  "schema_version": "1.0",
+  "checkpoint_id": "CP-STAGE03B-VERIFIED",
+  "project_id": "devflow",
+  "created_at": "2026-10-26T11:14:17.285279+00:00",
+  "reason": "work_completed",
+  "safe_to_resume": true,
+  "snapshot": {
+    "stage_id": "STAGE-03",
+    "work_id": "WORK-03-03",
+    "git_head_sha": "bfbf520fd7a1178bca9710a2e6e078bcfd42c808",
+    "server_deployments": {},
+    "last_action": "restricted_local_agent_verified",
+    "next_action": "configure_authenticated_https_mcp_transport",
+    "agent_probe_uid": 984,
+    "agent_profile_sha256": "0fb72a01fdc8453548e5c4103f0881b35c9953c450982efb7c11a4817d77980f",
+    "note": "Three read-only agent MCP tools verified in a real non-root process with no effective capabilities and no-new-privileges. Network transport, another remote host and live deployment health are not verified. HEAD is observed before this milestone commit."
+  },
+  "do_not_repeat": [
+    "create_github_repository",
+    "commit_stage0",
+    "push_stage0",
+    "bind_control_server_address",
+    "run_stage1_bootstrap_on_control_server",
+    "install_stage1",
+    "implement_stage2_execution_leases",
+    "implement_local_identity_and_encrypted_vault",
+    "implement_and_enroll_restricted_local_agent"
+  ]
+}

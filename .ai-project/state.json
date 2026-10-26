@@ -5,15 +5,15 @@
   "current": {
     "stage_id": "STAGE-03",
     "stage_status": "ACTIVE",
-    "work_id": "WORK-03-02",
+    "work_id": "WORK-03-03",
     "work_status": "COMPLETED",
-    "operation": "stage3a_verification",
-    "step": "local_identity_and_vault_verified",
+    "operation": "stage3b_verification",
+    "step": "restricted_local_agent_verified",
     "attempt": 1
   },
   "git": {
-    "branch": "stage/03a-identity-vault",
-    "head_sha": "a3b027c487f9a6c729f5d6a1e894ea93e0d82358"
+    "branch": "stage/03b-restricted-agent",
+    "head_sha": "bfbf520fd7a1178bca9710a2e6e078bcfd42c808"
   },
   "servers": {
     "control": {
@@ -24,8 +24,8 @@
     }
   },
   "active_error_id": null,
-  "latest_checkpoint_id": "CP-STAGE03A-VERIFIED",
-  "next_action": "configure_stage3_remote_agent_and_authenticated_transport",
+  "latest_checkpoint_id": "CP-STAGE03B-VERIFIED",
+  "next_action": "configure_authenticated_https_mcp_transport",
   "execution": null,
-  "updated_at": "2026-10-25T17:13:43.124734+00:00"
+  "updated_at": "2026-10-26T11:14:17.285279+00:00"
 }

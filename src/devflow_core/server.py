@@ -54,7 +54,7 @@ def build_server(registry: ControlRegistry, gate=None, control_root=None) -> Fas
         if gate is not None:
             gate.principal()
         return {"ok": True, "version": __version__, "transport": "stdio",
-                "read_only": True, "remote_agent": False, "vault": True, "vault_scope": "local_encrypted_reference_backend",
+                "read_only": True, "remote_agent": False, "local_restricted_agent": True, "vault": True, "vault_scope": "local_encrypted_reference_backend",
                 "identity_mode": "scoped_local_credential" if gate is not None else "trusted_local_process",
                 "execution_lease": True, "lease_scope": "cooperative_local_ledger", "watchdog": False}
 
@@ -104,5 +104,18 @@ def build_server(registry: ControlRegistry, gate=None, control_root=None) -> Fas
         # The control registry's local installation owns the security backend.
         root = control_root or registry.path.parent.parent
         return SecurityStore(root, registry.contracts).status()
+
+    @mcp.tool(annotations=annotations)
+    def agent_inventory() -> dict:
+        """List scoped local agent enrollments; never return credentials or claim remote connectivity."""
+        from .agents import AgentStore
+        projects = None
+        if gate is not None:
+            principal = gate.principal()
+            projects = principal["projects"]
+            for project_id in projects:
+                gate.check("project.read", project_id)
+        root = control_root or registry.path.parent.parent
+        return AgentStore(root, registry.contracts).inventory(projects)
 
     return mcp

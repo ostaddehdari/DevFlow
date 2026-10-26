@@ -70,14 +70,60 @@ def main() -> int:
             command.add_argument("--evidence", required=True)
         if name == "snapshot":
             command.add_argument("--checkpoint-id", default=None)
+    worker = sub.add_parser("agent-worker")
+    worker.add_argument("--agent-id", required=True)
+    worker.add_argument("--profile", type=Path, required=True)
+    worker.add_argument("--credential-file", type=Path, required=True)
+    agents = sub.add_parser("agent")
+    agent_commands = agents.add_subparsers(dest="agent_command", required=True)
+    for name in ("init", "inventory", "enroll", "revoke", "renew"):
+        command = agent_commands.add_parser(name)
+        if name == "init":
+            command.add_argument("--profile-dir", type=Path, required=True)
+        if name in {"enroll", "revoke", "renew"}:
+            command.add_argument("--agent-id", required=True)
+        if name == "enroll":
+            command.add_argument("--server-id", required=True)
+            command.add_argument("--project", required=True)
+            command.add_argument("--account", required=True)
+            command.add_argument("--credential-dir", type=Path, required=True)
+            command.add_argument("--allow-path", action="append", required=True)
+            command.add_argument("--capability", action="append", required=True,
+                                 choices=["system.info", "filesystem.list", "filesystem.read"])
     args = parser.parse_args()
+    if args.command == "agent-worker":
+        try:
+            from .agent_worker import AgentView, build_agent
+            code_root = Path(__file__).resolve().parents[2]
+            contracts = Contracts(args.contracts or code_root / "contracts")
+            view = AgentView(args.profile, args.credential_file, contracts, args.agent_id)
+            build_agent(view).run(transport="stdio")
+            return 0
+        except (DevFlowError, OSError) as exc:
+            message = str(exc) if isinstance(exc, DevFlowError) else "Agent filesystem access failed"
+            print(json.dumps({"ok": False, "error": message}), file=sys.stderr)
+            return 1
     root = args.root.resolve()
     try:
         registry = ControlRegistry(
             args.registry or root / "control" / "registry.json",
             Contracts(args.contracts or root / "contracts"),
         )
-        if args.command == "security":
+        if args.command == "agent":
+            from .agents import AgentStore
+            store = AgentStore(root, registry.contracts)
+            if args.agent_command == "init":
+                result = store.initialize(args.profile_dir)
+            elif args.agent_command == "inventory":
+                result = store.inventory()
+            elif args.agent_command == "enroll":
+                result = store.enroll(registry, args.agent_id, args.server_id, args.project,
+                    args.account, args.credential_dir, args.allow_path, args.capability)
+            elif args.agent_command == "renew":
+                result = store.renew(args.agent_id)
+            else:
+                result = store.revoke(args.agent_id)
+        elif args.command == "security":
             from .security import SecurityStore
             store = SecurityStore(root, registry.contracts)
             name = args.security_command
