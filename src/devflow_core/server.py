@@ -7,8 +7,10 @@ from . import __version__
 from .registry import ControlRegistry
 
 
-def build_server(registry: ControlRegistry, gate=None, control_root=None) -> FastMCP:
-    mcp = FastMCP("DevFlow ServerMaster", instructions=(
+def build_server(registry: ControlRegistry, gate=None, control_root=None, *, transport="stdio", token_verifier=None, auth=None) -> FastMCP:
+    mcp = FastMCP("DevFlow ServerMaster", host="127.0.0.1", port=8765,
+                  stateless_http=True, max_sessions=128, max_request_body_size=1048576,
+                  token_verifier=token_verifier, auth=auth, instructions=(
         "Read-only registry and local continuity inspection. Recorded server settings are declarations, "
         "not live health checks. No shell, deployment or watchdog is implemented; vault values are never exposed as tools."
     ))
@@ -53,7 +55,7 @@ def build_server(registry: ControlRegistry, gate=None, control_root=None) -> Fas
         """Report bootstrap version and actual supported capabilities."""
         if gate is not None:
             gate.principal()
-        return {"ok": True, "version": __version__, "transport": "stdio",
+        return {"ok": True, "version": __version__, "transport": transport,
                 "read_only": True, "remote_agent": False, "local_restricted_agent": True, "vault": True, "vault_scope": "local_encrypted_reference_backend",
                 "identity_mode": "scoped_local_credential" if gate is not None else "trusted_local_process",
                 "execution_lease": True, "lease_scope": "cooperative_local_ledger", "watchdog": False}

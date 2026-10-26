@@ -1,16 +1,13 @@
 # Next
 
-1. Apply Stage 3B and run `bash scripts/verify-stage3b.sh` as the trusted root operator.
-2. Require its actual dedicated-user MCP probe before accepting WORK-03-03; a
-   single-UID build environment's skipped subprocess test is not installation proof.
-3. Commit verified source/milestones locally and create a clean runtime checkpoint.
-4. Implement WORK-03-04: configure the public resource URI, TLS, OAuth discovery,
-   issuer/audience checks and request authorization before exposing MCP externally.
-5. Local stdio credentials are not public OAuth tokens. Remote-host enrollment and
-   authenticated peer transport must not infer trust from a local profile alone.
-6. Implement target-side fencing/idempotency and controlled external execution
-   before unattended recovery, deployment, watchdogs or reporting.
+Stage 3B was verified on the control server: 125 tests, real non-root UID 984,
+three restricted agent tools, source commit 65230c8 and continuity READY.
 
-Operator-verified before this patch: Stage 3A, 95 tests, seven main MCP tools,
-clean source commit bfbf520 and runtime resume READY. Stage 3B is pending the
-mandatory real control-server agent probe. Publication to GitHub is separate.
+Stage 3C source preparation adds an OAuth resource server bound to loopback and
+local tests. To complete WORK-03-04, choose the public HTTPS resource URL and
+the OAuth issuer, provision its public JWKS and project subject mapping outside
+Git, then verify a real end-to-end TLS and OAuth MCP session. A source-only
+commit is not a network deployment or completed Stage 3 checkpoint.
+
+After Stage 3, target-side fencing and bounded controlled execution are needed
+before unattended deployment or recovery. Browser automation remains excluded.

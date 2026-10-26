@@ -24,6 +24,8 @@ def main() -> int:
     status.add_argument("--project", default=None)
     activate = sub.add_parser("activate")
     activate.add_argument("project_id")
+    http = sub.add_parser('serve-http')
+    http.add_argument('--config', type=Path, required=True)
     serve = sub.add_parser("serve")
     serve.add_argument("--credential-file", type=Path, default=None)
     security = sub.add_parser("security")
@@ -109,6 +111,13 @@ def main() -> int:
             args.registry or root / "control" / "registry.json",
             Contracts(args.contracts or root / "contracts"),
         )
+        if args.command == 'serve-http':
+            from .network import build_http
+            import uvicorn
+            mcp = build_http(root, args.config)
+            uvicorn.run(mcp.streamable_http_app(), host='127.0.0.1', port=8765,
+                        proxy_headers=False, server_header=False, access_log=False)
+            return 0
         if args.command == "agent":
             from .agents import AgentStore
             store = AgentStore(root, registry.contracts)

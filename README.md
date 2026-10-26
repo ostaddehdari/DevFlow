@@ -93,3 +93,6 @@ bash scripts/devflow agent inventory
 تغییر نمی‌دهد. اجرای فرمان روی سرور، اتصال عامل به میزبان دیگر، watchdog، گزارش
 تلگرام و اتصال خصوصی افزونه هنوز پیاده‌سازی یا فعال نشده‌اند؛ حتی اگر در تنظیمات درخواست شده باشند.
 اسرار باید خارج از Git بمانند و با `vault://...` یا ارجاع‌های مجاز قرارداد معرفی شوند.
+
+Stage 3C source preparation adds a loopback OAuth resource server. Deployment
+requires an external HTTPS domain and issuer; see `docs/STAGE-03C-PREP.md`.
