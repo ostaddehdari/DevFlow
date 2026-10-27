@@ -97,7 +97,7 @@
       "security_status",
       "agent_inventory"
     ],
-    "execution_readiness_scope": "WORK-03-04 authenticated HTTPS MCP transport; public resource URI and OAuth provider remain unresolved.",
+    "execution_readiness_scope": "Stage 3 read-only public MCP verified with Auth0 M2M. Stage 4 controlled execution, remote agent, and user OAuth client remain unimplemented.",
     "status_sources": {
       "stage0": "user-provided Git push output for c76c386",
       "stage1": "user-provided server bootstrap: 21 passed, registry ok, real MCP smoke passed; commit cfc0d427ace44210b3fc678c43215c01439122be"
@@ -109,7 +109,7 @@
     "local_identity_backend": "project_scoped_revocable_credentials",
     "vault_backend": "servermaster_local_fernet",
     "master_keys_outside_repository": true,
-    "network_authentication": false,
+    "network_authentication": true,
     "remote_agent": false,
     "local_restricted_agent": true,
     "local_agent_uid": 984,
@@ -118,7 +118,10 @@
       "filesystem.list",
       "filesystem.read",
       "system.info"
-    ]
+    ],
+    "oauth_issuer": "https://dev-fqzv1aqwljc7mhwz.us.auth0.com/",
+    "public_mcp_resource": "https://srun.ir/mcpdevflow",
+    "network_transport": "authenticated_https_streamable_http"
   },
   "stages": [
     {
@@ -504,7 +507,7 @@
       "id": "STAGE-03",
       "number": 3,
       "title": "هویت، اسرار و اتصال مجاز",
-      "status": "ACTIVE",
+      "status": "COMPLETED",
       "goal": "اتصال راه دور تنها پس از تعیین دامنهٔ دسترسی فراهم شود.",
       "depends_on": [
         "STAGE-02"
@@ -655,7 +658,7 @@
           "number": "3.4",
           "title": "انتقال شبکهٔ احرازهویت‌شده",
           "type": "security",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "پیاده‌سازی انتقال MCP، TLS و دسترسی قابل ابطال پس از انتخاب میزبان و روش احراز هویت.",
           "inputs": [
             "قراردادهای contracts/",
