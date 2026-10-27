@@ -30,6 +30,8 @@ def configured_verifier(monkeypatch):
         claims={'iss':ISSUER,'aud':RESOURCE,'exp':int(time.time())+300,'iat':int(time.time()),
                 'sub':'alice','client_id':'test-client','scope':'devflow.read'}
         claims.update(changes)
+        if claims.get('client_id') is None:
+            claims.pop('client_id', None)
         return jwt.encode(claims,private,algorithm='RS256',headers={'kid':'one'})
     return JWTVerifier(policy),signed,config,policy
 
@@ -40,6 +42,8 @@ def test_oauth_verifier_rejects_wrong_audience_scope_subject_client_and_expiry(c
     for changes in ({'aud':'https://other.invalid/mcp'}, {'scope':'other'},
                     {'sub':'mallory'}, {'client_id':'other-client'}, {'exp':int(time.time())-300}):
         assert check(signed(**changes)) is None
+    assert check(signed(azp='other-client')) is None
+    assert check(signed(client_id=None, azp='test-client')).client_id == 'test-client'
     config['principals'].clear()
     assert check(signed()) is None
 
@@ -86,12 +90,14 @@ def test_real_server_app_has_authenticated_mcp_routes(tmp_path, configured_verif
     shutil.copytree(Path(__file__).resolve().parents[1]/'contracts',root/'contracts')
     ControlRegistry(root/'control/registry.json',Contracts(root/'contracts')).register(root/'.ai-project/project.settings.json')
     verifier,signed,config,policy=configured_verifier
-    config.update(schema_version='1.0',jwks_path='/etc/devflow/test-jwks.json')
+    resource='https://srun.ir/mcpdevflow'
+    config.update(schema_version='1.0',jwks_path='/etc/devflow/test-jwks.json',resource=resource)
     monkeypatch.setattr('devflow_core.network.private_json',lambda path, maximum: config)
     monkeypatch.setattr('devflow_core.network.NetworkPolicy.keys',lambda self, data: policy.keys(data))
     app=build_http(root, '/etc/devflow/network.json')
     with TestClient(app.streamable_http_app()) as client:
-        assert client.post('/mcp',json={}).status_code==401
-        assert client.get('/.well-known/oauth-protected-resource/mcp').json()['resource']==RESOURCE
-        response=client.post('/mcp',headers={'Authorization':'Bearer '+signed()},json={})
+        assert client.post('/mcpdevflow',json={}).status_code==401
+        assert client.get('/.well-known/oauth-protected-resource/mcpdevflow').json()['resource']==resource
+        assert client.post('/mcp',json={}).status_code==404
+        response=client.post('/mcpdevflow',headers={'Authorization':'Bearer '+signed(aud=resource)},json={})
         assert response.status_code != 401

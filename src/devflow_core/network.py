@@ -3,6 +3,7 @@ import json
 import os
 import stat
 from pathlib import Path
+from urllib.parse import urlsplit
 
 import jwt
 from mcp.server.auth.provider import AccessToken
@@ -67,8 +68,16 @@ class NetworkPolicy:
         issuer, resource = data['issuer'], data['resource']
         if not issuer.startswith('https://') or not resource.startswith('https://') or '?' in issuer+resource or '#' in issuer+resource:
             raise DevFlowError('OAuth issuer/resource require HTTPS without query or fragment')
-        if not resource.endswith('/mcp'):
-            raise DevFlowError('OAuth resource must end at /mcp')
+        resource_parts = urlsplit(resource)
+        issuer_parts = urlsplit(issuer)
+        if (resource_parts.scheme != 'https' or issuer_parts.scheme != 'https' or
+            not resource_parts.hostname or not issuer_parts.hostname or
+            resource_parts.username or issuer_parts.username or
+            resource_parts.password or issuer_parts.password or
+            not resource_parts.path.startswith('/') or resource_parts.path == '/' or
+            resource_parts.path.endswith('/') or '//' in resource_parts.path or
+            '%' in resource_parts.path or '..' in resource_parts.path.split('/')):
+            raise DevFlowError('OAuth resource must be an unambiguous HTTPS path')
         if Path(data['jwks_path']).resolve().is_relative_to(self.root):
             raise DevFlowError('OAuth keys must be outside project')
         projects = {row['project_id'] for row in ControlRegistry(
@@ -134,13 +143,16 @@ class JWTVerifier:
             key = jwt.PyJWK.from_dict(key_data).key
             claims = jwt.decode(token, key, algorithms=[header['alg']], issuer=config['issuer'],
                 audience=config['resource'], leeway=30,
-                options={'require':['iss','aud','exp','iat','sub','client_id','scope']})
-            if not isinstance(claims['sub'], str) or not isinstance(claims['client_id'],str) or not isinstance(claims['scope'],str):
+                options={'require':['iss','aud','exp','iat','sub','scope']})
+            client_id = claims.get('client_id', claims.get('azp'))
+            if ('client_id' in claims and 'azp' in claims and claims['client_id'] != claims['azp']):
+                return None
+            if not isinstance(claims['sub'], str) or not isinstance(client_id, str) or not client_id or not isinstance(claims['scope'], str):
                 return None
             scopes = claims['scope'].split()
-            if 'devflow.read' not in scopes or not any(p['subject']==claims['sub'] and p['client_id']==claims['client_id'] for p in config['principals']):
+            if 'devflow.read' not in scopes or not any(p['subject']==claims['sub'] and p['client_id']==client_id for p in config['principals']):
                 return None
-            return AccessToken(token=token, client_id=claims['client_id'], subject=claims['sub'],
+            return AccessToken(token=token, client_id=client_id, subject=claims['sub'],
                                scopes=scopes, expires_at=int(claims['exp']), resource=config['resource'])
         except (jwt.PyJWTError, DevFlowError, ValueError, KeyError, TypeError, OSError):
             return None
@@ -159,4 +171,5 @@ def build_http(root, config_path):
                         resource_server_url=AnyHttpUrl(data['resource']),
                         required_scopes=['devflow.read'], validate_token_resource=True)
     return build_server(registry, policy, Path(root), transport='streamable-http',
-                        token_verifier=JWTVerifier(policy), auth=auth)
+                        token_verifier=JWTVerifier(policy), auth=auth,
+                        http_path=urlsplit(data['resource']).path)

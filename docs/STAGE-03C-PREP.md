@@ -12,13 +12,13 @@ No OAuth grant or token issuance is implemented here.
 This is **source preparation, not a verified public deployment**. Do not create
 `CP-STAGE03C-VERIFIED` or mark WORK-03-04 complete from these tests. First bind
 an actual HTTPS domain and a real OAuth issuer. The issuer must issue access
-tokens whose `aud` is the exact `https://DOMAIN/mcp` resource. Install its
+tokens whose `aud` is the exact public resource URI (here `https://srun.ir/mcpdevflow`). Install its
 signing JWKS outside the repository in a root-private file and update it during
 key rotation. The JSON configuration follows `contracts/network.schema.json`.
 The only allowed principal roles here are `viewer` and `operator`; every remote
 tool remains read-only, including for operators. Use a reverse proxy with a
-valid TLS certificate, preserve the `/mcp` and
-`/.well-known/oauth-protected-resource/mcp` paths, and proxy internally to
+valid TLS certificate, preserve the `/mcpdevflow` and
+`/.well-known/oauth-protected-resource/mcpdevflow` paths, and proxy internally to
 127.0.0.1:8765, setting the upstream Host header to `127.0.0.1:8765`
 for the SDK host check. Keep the listener bound to loopback. Do not place client
 secrets, private signing keys, or access tokens in Git.
@@ -27,3 +27,11 @@ For completion, verify the live certificate, resource discovery, unauthenticated
 401 challenge, wrong issuer/audience/expired token rejection, scoped successful
 MCP tool call, cross-project denial, and immediate subject revocation. Record
 actual evidence and update the Stage 3 milestone only then.
+
+For the selected public URI, leave existing `srun.ir` locations intact. Add
+only exact reverse-proxy locations after inspecting the active server block and
+certificate. Do not activate the proxy or start the service until a trusted
+OAuth issuer and public signing keys have been provisioned and verified.
+
+The selected `srun.ir` path and a location-only Nginx example are in
+`docs/STAGE-03C-HOST.md`. The OAuth issuer still needs to be provisioned.

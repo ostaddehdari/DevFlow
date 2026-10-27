@@ -7,9 +7,10 @@ from . import __version__
 from .registry import ControlRegistry
 
 
-def build_server(registry: ControlRegistry, gate=None, control_root=None, *, transport="stdio", token_verifier=None, auth=None) -> FastMCP:
+def build_server(registry: ControlRegistry, gate=None, control_root=None, *, transport="stdio", token_verifier=None, auth=None, http_path="/mcp") -> FastMCP:
     mcp = FastMCP("DevFlow ServerMaster", host="127.0.0.1", port=8765,
                   stateless_http=True, max_sessions=128, max_request_body_size=1048576,
+                  streamable_http_path=http_path,
                   token_verifier=token_verifier, auth=auth, instructions=(
         "Read-only registry and local continuity inspection. Recorded server settings are declarations, "
         "not live health checks. No shell, deployment or watchdog is implemented; vault values are never exposed as tools."
