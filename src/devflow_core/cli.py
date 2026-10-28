@@ -30,15 +30,17 @@ def main() -> int:
     serve.add_argument("--credential-file", type=Path, default=None)
     operation = sub.add_parser('operation-plan')
     operation_commands = operation.add_subparsers(dest='operation_command', required=True)
-    for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke'):
+    for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke', 'run-read'):
         command = operation_commands.add_parser(name)
-        if name in ('validate', 'approve', 'verify'):
+        if name in ('validate', 'approve', 'verify', 'run-read'):
             command.add_argument('--plan', type=Path, required=True)
         if name == 'approve':
             command.add_argument('--credential-file', type=Path, required=True)
             command.add_argument('--seconds', type=int, default=600)
         if name in ('verify', 'revoke'):
             command.add_argument('--approval-id', required=True)
+        if name == 'run-read':
+            command.add_argument('--owner', required=True)
     security = sub.add_parser("security")
     security_commands = security.add_subparsers(dest="security_command", required=True)
     for name in ("init", "status", "principal-create", "issue", "revoke", "disable", "vault-put", "vault-list", "vault-rotate"):
@@ -135,12 +137,16 @@ def main() -> int:
             policy = PlanPolicy(root, registry.contracts)
             name = args.operation_command
             plan = None
-            if name in ('validate', 'approve', 'verify'):
+            if name in ('validate', 'approve', 'verify', 'run-read'):
                 if args.plan.stat().st_size > 65536:
                     raise DevFlowError('Operation plan exceeds 64 KiB')
                 plan = read_json(args.plan)
             if name == 'validate':
                 result = {'ok': True, **policy.validate(plan)}
+            elif name == 'run-read':
+                from .continuity import from_registry
+                from .controlled_execution import ReadExecutor
+                result = ReadExecutor(policy, from_registry(registry, plan['project_id'])).run(plan, args.owner)
             else:
                 approvals = ApprovalStore(policy, SecurityStore(root, registry.contracts))
                 if name == 'approval-init':
