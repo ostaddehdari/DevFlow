@@ -4,7 +4,7 @@ import os
 import sys
 from pathlib import Path
 
-from .contracts import Contracts, DevFlowError
+from .contracts import Contracts, DevFlowError, read_json
 from .registry import ControlRegistry
 
 
@@ -28,6 +28,17 @@ def main() -> int:
     http.add_argument('--config', type=Path, required=True)
     serve = sub.add_parser("serve")
     serve.add_argument("--credential-file", type=Path, default=None)
+    operation = sub.add_parser('operation-plan')
+    operation_commands = operation.add_subparsers(dest='operation_command', required=True)
+    for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke'):
+        command = operation_commands.add_parser(name)
+        if name in ('validate', 'approve', 'verify'):
+            command.add_argument('--plan', type=Path, required=True)
+        if name == 'approve':
+            command.add_argument('--credential-file', type=Path, required=True)
+            command.add_argument('--seconds', type=int, default=600)
+        if name in ('verify', 'revoke'):
+            command.add_argument('--approval-id', required=True)
     security = sub.add_parser("security")
     security_commands = security.add_subparsers(dest="security_command", required=True)
     for name in ("init", "status", "principal-create", "issue", "revoke", "disable", "vault-put", "vault-list", "vault-rotate"):
@@ -118,7 +129,33 @@ def main() -> int:
             uvicorn.run(mcp.streamable_http_app(), host='127.0.0.1', port=8765,
                         proxy_headers=False, server_header=False, access_log=False)
             return 0
-        if args.command == "agent":
+        if args.command == 'operation-plan':
+            from .operation_plans import ApprovalStore, PlanPolicy
+            from .security import SecurityStore, read_private_file
+            policy = PlanPolicy(root, registry.contracts)
+            name = args.operation_command
+            plan = None
+            if name in ('validate', 'approve', 'verify'):
+                if args.plan.stat().st_size > 65536:
+                    raise DevFlowError('Operation plan exceeds 64 KiB')
+                plan = read_json(args.plan)
+            if name == 'validate':
+                result = {'ok': True, **policy.validate(plan)}
+            else:
+                approvals = ApprovalStore(policy, SecurityStore(root, registry.contracts))
+                if name == 'approval-init':
+                    result = approvals.initialize()
+                elif name == 'approve':
+                    try:
+                        credential = read_private_file(args.credential_file, 256).decode().strip()
+                    except UnicodeError as exc:
+                        raise DevFlowError('Operator credential is invalid') from exc
+                    result = approvals.grant(plan, credential, args.seconds)
+                elif name == 'verify':
+                    result = {'ok': True, **approvals.verify(plan, args.approval_id)}
+                else:
+                    result = approvals.revoke(args.approval_id)
+        elif args.command == "agent":
             from .agents import AgentStore
             store = AgentStore(root, registry.contracts)
             if args.agent_command == "init":

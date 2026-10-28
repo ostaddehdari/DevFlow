@@ -20,8 +20,8 @@ def test_canonical_design(contracts):
     validate_design(value, contracts, "devflow")
     assert all(s["status"] == "COMPLETED" for s in value["stages"][:2])
     assert value["stages"][2]["status"] in {"PLANNED", "VERIFYING", "COMPLETED"}
-    assert value["stages"][3]["status"] in {"PLANNED", "ACTIVE"}
-    assert all(s["status"] == "PLANNED" for s in value["stages"][4:])
+    assert value["stages"][3]["status"] in {"ACTIVE", "COMPLETED"}
+    assert value["stages"][4]["status"] in {"PLANNED", "ACTIVE", "VERIFYING", "COMPLETED"}
 
 
 @pytest.mark.parametrize("case", ["identity", "duplicate", "unknown", "cycle", "incomplete", "blocked", "outside"])

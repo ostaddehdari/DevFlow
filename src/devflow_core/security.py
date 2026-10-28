@@ -24,7 +24,7 @@ ROLE_ACTIONS = {
     'viewer': frozenset({'registry.read', 'project.read', 'continuity.read', 'security.read'}),
     'agent': frozenset({'project.read', 'continuity.read', 'continuity.write'}),
     'operator': frozenset({'registry.read', 'project.read', 'continuity.read', 'security.read',
-                           'continuity.write', 'vault.read', 'vault.write'}),
+                           'continuity.write', 'vault.read', 'vault.write', 'operation.approve'}),
 }
 
 
@@ -336,6 +336,21 @@ class SecurityStore:
     def authorize(self, token, action, project_id, reference=None):
         with self._connection() as connection:
             return self._authorize(connection, token, action, project_id, reference)
+
+    def credential_active(self, credential_id, project_id):
+        """Check that an existing approval's issuing identity remains valid."""
+        if not isinstance(credential_id, str) or not re.fullmatch(r'C-[0-9a-f]{32}', credential_id):
+            return False
+        with self._connection() as connection:
+            row = connection.execute('''SELECT c.expires,c.revoked,p.disabled,p.role,p.projects FROM credentials c
+                JOIN principals p ON c.principal_id=p.principal_id WHERE c.credential_id=?''',
+                (credential_id,)).fetchone()
+            if not row or row['revoked'] is not None or row['disabled'] or row['expires'] <= self._now():
+                return False
+            try:
+                return row['role'] == 'operator' and project_id in json.loads(row['projects'])
+            except (TypeError, ValueError):
+                return False
 
     def revoke(self, credential_id):
         if not isinstance(credential_id, str) or not re.fullmatch(r'C-[0-9a-f]{32}', credential_id):

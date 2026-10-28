@@ -1,0 +1,32 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devflow.local/schemas/operation.plan.schema.json",
+  "title": "DevFlow bounded operation plan",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "operation_id", "project_id", "server_id", "kind", "arguments", "preconditions", "postconditions"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "operation_id": {"type": "string", "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"},
+    "project_id": {"type": "string", "minLength": 1},
+    "server_id": {"type": "string", "minLength": 1},
+    "kind": {"enum": ["filesystem.read", "filesystem.write"]},
+    "arguments": {"type": "object", "additionalProperties": false, "required": ["path"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1, "maxLength": 1024},
+        "content_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "content_bytes": {"type": "integer", "minimum": 0, "maximum": 1048576}
+      }
+    },
+    "preconditions": {"type": "object", "additionalProperties": false, "required": ["git_head_sha", "git_branch"],
+      "properties": {
+        "git_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "git_branch": {"type": "string", "minLength": 1, "maxLength": 128},
+        "existing_sha256": {"type": ["string", "null"], "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "postconditions": {"type": "object", "additionalProperties": false, "required": ["sha256"],
+      "properties": {"sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}}
+    }
+  }
+}
