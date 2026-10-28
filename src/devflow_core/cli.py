@@ -28,6 +28,10 @@ def main() -> int:
     http.add_argument('--config', type=Path, required=True)
     serve = sub.add_parser("serve")
     serve.add_argument("--credential-file", type=Path, default=None)
+    git_plan = sub.add_parser('git-plan')
+    git_commands = git_plan.add_subparsers(dest='git_command', required=True)
+    inspect = git_commands.add_parser('inspect')
+    inspect.add_argument('--branch', required=True)
     operation = sub.add_parser('operation-plan')
     operation_commands = operation.add_subparsers(dest='operation_command', required=True)
     for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke', 'run-read'):
@@ -131,7 +135,10 @@ def main() -> int:
             uvicorn.run(mcp.streamable_http_app(), host='127.0.0.1', port=8765,
                         proxy_headers=False, server_header=False, access_log=False)
             return 0
-        if args.command == 'operation-plan':
+        if args.command == 'git-plan':
+            from .git_workflow import GitWorkflow
+            result = GitWorkflow(root, registry.contracts).inspect(args.branch)
+        elif args.command == 'operation-plan':
             from .operation_plans import ApprovalStore, PlanPolicy
             from .security import SecurityStore, read_private_file
             policy = PlanPolicy(root, registry.contracts)
