@@ -63,14 +63,34 @@ class PlanPolicy:
         server = self.servers.get(plan['server_id'])
         if not server or server['project_root'] != str(self.root):
             raise DevFlowError('Operation server is not bound to this project root')
+        kind, args = plan['kind'], plan['arguments']
+        before = plan['preconditions']
+        after = plan['postconditions']
+        if kind == 'git.push':
+            if 'git' not in server.get('capabilities', []):
+                raise DevFlowError('Git capability is not granted to server')
+            from .git_workflow import GitWorkflow
+            if set(args) != {'branch', 'remote', 'refspec'} or set(before) != {
+                'git_branch', 'git_head_sha', 'remote_head_sha'
+            } or set(after) != {'remote_head_sha'}:
+                raise DevFlowError('Git push plan fields are not exact')
+            observed = GitWorkflow(self.root, self.contracts).inspect(args['branch'])
+            if (args['remote'] != observed['remote'] or
+                args['refspec'] != observed['refspec'] or
+                before['git_branch'] != observed['branch'] or
+                before['git_head_sha'] != observed['head_sha'] or
+                after['remote_head_sha'] != observed['head_sha']):
+                raise DevFlowError('Git push plan differs from inspected source or destination')
+            return {'operation_id': plan['operation_id'],
+                    'plan_sha256': hashlib.sha256(canonical(plan)).hexdigest(),
+                    'sensitive': True, 'branch': observed['branch'],
+                    'remote_head_sha': before['remote_head_sha'],
+                    'push_enabled': False}
         if 'filesystem' not in server.get('capabilities', []):
             raise DevFlowError('Operation capability is not granted to server')
-        kind, args = plan['kind'], plan['arguments']
         path = self.target(args['path'])
         if path.relative_to(self.root).parts[0] in {'.git', '.devflow', '.venv', '.ai-project'}:
             raise DevFlowError('Internal project storage is outside the operation scope')
-        before = plan['preconditions']
-        after = plan['postconditions']
         if kind == 'filesystem.read':
             if set(args) != {'path'} or before.get('existing_sha256') != after['sha256']:
                 raise DevFlowError('Read plan requires matching expected content digest')
