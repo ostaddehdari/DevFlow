@@ -35,16 +35,16 @@ def main() -> int:
         command.add_argument('--branch', required=True)
     operation = sub.add_parser('operation-plan')
     operation_commands = operation.add_subparsers(dest='operation_command', required=True)
-    for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke', 'run-read'):
+    for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke', 'run-read', 'run-push'):
         command = operation_commands.add_parser(name)
-        if name in ('validate', 'approve', 'verify', 'run-read'):
+        if name in ('validate', 'approve', 'verify', 'run-read', 'run-push'):
             command.add_argument('--plan', type=Path, required=True)
         if name == 'approve':
             command.add_argument('--credential-file', type=Path, required=True)
             command.add_argument('--seconds', type=int, default=600)
-        if name in ('verify', 'revoke'):
+        if name in ('verify', 'revoke', 'run-push'):
             command.add_argument('--approval-id', required=True)
-        if name == 'run-read':
+        if name in ('run-read', 'run-push'):
             command.add_argument('--owner', required=True)
     security = sub.add_parser("security")
     security_commands = security.add_subparsers(dest="security_command", required=True)
@@ -151,12 +151,18 @@ def main() -> int:
             policy = PlanPolicy(root, registry.contracts)
             name = args.operation_command
             plan = None
-            if name in ('validate', 'approve', 'verify', 'run-read'):
+            if name in ('validate', 'approve', 'verify', 'run-read', 'run-push'):
                 if args.plan.stat().st_size > 65536:
                     raise DevFlowError('Operation plan exceeds 64 KiB')
                 plan = read_json(args.plan)
             if name == 'validate':
                 result = {'ok': True, **policy.validate(plan)}
+            elif name == 'run-push':
+                from .continuity import from_registry
+                from .git_execution import GitPushExecutor
+                approvals = ApprovalStore(policy, SecurityStore(root, registry.contracts))
+                result = GitPushExecutor(policy, approvals, from_registry(registry, plan['project_id'])).run(
+                    plan, args.approval_id, args.owner)
             elif name == 'run-read':
                 from .continuity import from_registry
                 from .controlled_execution import ReadExecutor
