@@ -33,6 +33,14 @@ def main() -> int:
     for name in ('inspect', 'remote', 'prepare'):
         command = git_commands.add_parser(name)
         command.add_argument('--branch', required=True)
+    deployment = sub.add_parser('deployment-plan')
+    deployment_commands = deployment.add_subparsers(dest='deployment_command', required=True)
+    for name in ('inspect', 'prepare', 'validate'):
+        command = deployment_commands.add_parser(name)
+        if name == 'validate':
+            command.add_argument('--plan', type=Path, required=True)
+        else:
+            command.add_argument('--branch', required=True)
     operation = sub.add_parser('operation-plan')
     operation_commands = operation.add_subparsers(dest='operation_command', required=True)
     for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke', 'run-read', 'run-push'):
@@ -136,7 +144,18 @@ def main() -> int:
             uvicorn.run(mcp.streamable_http_app(), host='127.0.0.1', port=8765,
                         proxy_headers=False, server_header=False, access_log=False)
             return 0
-        if args.command == 'git-plan':
+        if args.command == 'deployment-plan':
+            from .deployment import DeploymentWorkflow
+            workflow = DeploymentWorkflow(root, registry.contracts)
+            if args.deployment_command == 'inspect':
+                result = workflow.inspect(args.branch)
+            elif args.deployment_command == 'prepare':
+                result = workflow.prepare(args.branch)
+            else:
+                if args.plan.stat().st_size > 65536:
+                    raise DevFlowError('Deployment plan exceeds 64 KiB')
+                result = workflow.validate(read_json(args.plan))
+        elif args.command == 'git-plan':
             from .git_workflow import GitWorkflow
             workflow = GitWorkflow(root, registry.contracts)
             if args.git_command == 'inspect':
