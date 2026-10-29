@@ -35,12 +35,20 @@ def main() -> int:
         command.add_argument('--branch', required=True)
     deployment = sub.add_parser('deployment-plan')
     deployment_commands = deployment.add_subparsers(dest='deployment_command', required=True)
-    for name in ('inspect', 'prepare', 'validate'):
+    for name in ('inspect', 'prepare', 'validate', 'prepare-execution', 'approve', 'verify', 'run'):
         command = deployment_commands.add_parser(name)
-        if name == 'validate':
+        if name in ('validate', 'approve', 'verify', 'run'):
             command.add_argument('--plan', type=Path, required=True)
-        else:
+        if name in ('inspect', 'prepare', 'prepare-execution'):
             command.add_argument('--branch', required=True)
+        if name == 'approve':
+            command.add_argument('--credential-file', type=Path, required=True)
+            command.add_argument('--seconds', type=int, default=600)
+        if name in ('verify', 'run'):
+            command.add_argument('--approval-id', required=True)
+        if name == 'run':
+            command.add_argument('--token-file', type=Path, required=True)
+            command.add_argument('--owner', default='stage4-deploy-local')
     operation = sub.add_parser('operation-plan')
     operation_commands = operation.add_subparsers(dest='operation_command', required=True)
     for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke', 'run-read', 'run-push'):
@@ -145,16 +153,40 @@ def main() -> int:
                         proxy_headers=False, server_header=False, access_log=False)
             return 0
         if args.command == 'deployment-plan':
-            from .deployment import DeploymentWorkflow
+            from .deployment import DeploymentWorkflow, DeploymentPolicy
             workflow = DeploymentWorkflow(root, registry.contracts)
             if args.deployment_command == 'inspect':
                 result = workflow.inspect(args.branch)
             elif args.deployment_command == 'prepare':
                 result = workflow.prepare(args.branch)
+            elif args.deployment_command == 'prepare-execution':
+                result = workflow.prepare_execution(args.branch)
             else:
                 if args.plan.stat().st_size > 65536:
                     raise DevFlowError('Deployment plan exceeds 64 KiB')
-                result = workflow.validate(read_json(args.plan))
+                plan = read_json(args.plan)
+                if args.deployment_command == 'validate':
+                    result = workflow.validate(plan) if plan.get('execution_enabled') is False else {
+                        'ok': True, **DeploymentPolicy(workflow).validate(plan)}
+                else:
+                    from .operation_plans import ApprovalStore
+                    from .security import SecurityStore, read_private_file
+                    policy = DeploymentPolicy(workflow)
+                    approvals = ApprovalStore(policy, SecurityStore(root, registry.contracts))
+                    if args.deployment_command == 'approve':
+                        try:
+                            credential = read_private_file(args.credential_file, 256).decode().strip()
+                        except UnicodeError as exc:
+                            raise DevFlowError('Operator credential is invalid') from exc
+                        result = approvals.grant(plan, credential, args.seconds)
+                    elif args.deployment_command == 'verify':
+                        result = {'ok': True, **approvals.verify(plan, args.approval_id)}
+                    else:
+                        from .continuity import from_registry
+                        from .deployment_execution import ReleaseExecutor
+                        result = ReleaseExecutor(workflow, approvals, from_registry(
+                            registry, plan['project_id'])).run(
+                                plan, args.approval_id, args.token_file, args.owner)
         elif args.command == 'git-plan':
             from .git_workflow import GitWorkflow
             workflow = GitWorkflow(root, registry.contracts)

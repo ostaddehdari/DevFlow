@@ -1,6 +1,7 @@
 """Read-only preflight for migrating the DevFlow MCP service to pinned releases."""
 
 import hashlib
+import copy
 import re
 import subprocess
 import uuid
@@ -10,6 +11,7 @@ import httpx
 
 from .contracts import DevFlowError
 from .git_workflow import GitWorkflow
+from .operation_plans import canonical
 
 
 RESOURCE = 'https://srun.ir/mcpdevflow'
@@ -180,3 +182,40 @@ class DeploymentWorkflow:
         return {'ok': True, 'operation_id': plan['operation_id'],
                 'candidate_sha': current['source']['git_head_sha'],
                 'execution_enabled': False}
+
+    def prepare_execution(self, branch):
+        """Produce a separate, sensitive plan that requires local approval."""
+        plan = self.prepare(branch)
+        if self.release_root.is_symlink() or (self.release_root / plan['source']['git_head_sha']).exists():
+            raise DevFlowError('Release destination is already occupied')
+        plan['execution_enabled'] = True
+        self.contracts.validate(plan, 'deployment.plan.schema.json')
+        return plan
+
+
+class DeploymentPolicy:
+    """Adapter for the local exact-plan approval ledger."""
+
+    def __init__(self, workflow):
+        self.workflow = workflow
+        self.root = workflow.root
+        self.contracts = workflow.contracts
+        self.project_id = workflow.git.project_id
+
+    def validate(self, plan):
+        if not isinstance(plan, dict) or len(canonical(plan)) > 65536:
+            raise DevFlowError('Deployment plan must be a bounded JSON object')
+        if plan.get('execution_enabled') is not True:
+            raise DevFlowError('Only an executable deployment plan may be approved')
+        self.contracts.validate(plan, 'deployment.plan.schema.json')
+        proposal = copy.deepcopy(plan)
+        proposal['execution_enabled'] = False
+        self.workflow.validate(proposal)
+        if (plan['project_id'] != self.project_id or
+            self.workflow.release_root.is_symlink() or
+            (self.workflow.release_root / plan['source']['git_head_sha']).exists()):
+            raise DevFlowError('Deployment target is occupied or project differs')
+        return {'operation_id': plan['operation_id'],
+                'plan_sha256': hashlib.sha256(canonical(plan)).hexdigest(),
+                'candidate_sha': plan['source']['git_head_sha'], 'sensitive': True,
+                'execution_enabled': True}

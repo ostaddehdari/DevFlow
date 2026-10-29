@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "https://devflow.local/schemas/deployment.plan.schema.json",
-  "title": "DevFlow read-only service deployment proposal",
+  "title": "DevFlow pinned service deployment proposal",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "operation_id", "project_id", "kind", "service", "source", "preconditions", "release", "health", "execution_enabled"],
@@ -54,6 +54,6 @@
         "listener": {"const": "127.0.0.1:8765"}
       }
     },
-    "execution_enabled": {"const": false}
+    "execution_enabled": {"type": "boolean"}
   }
 }
