@@ -30,8 +30,9 @@ def main() -> int:
     serve.add_argument("--credential-file", type=Path, default=None)
     git_plan = sub.add_parser('git-plan')
     git_commands = git_plan.add_subparsers(dest='git_command', required=True)
-    inspect = git_commands.add_parser('inspect')
-    inspect.add_argument('--branch', required=True)
+    for name in ('inspect', 'remote', 'prepare'):
+        command = git_commands.add_parser(name)
+        command.add_argument('--branch', required=True)
     operation = sub.add_parser('operation-plan')
     operation_commands = operation.add_subparsers(dest='operation_command', required=True)
     for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke', 'run-read'):
@@ -137,7 +138,13 @@ def main() -> int:
             return 0
         if args.command == 'git-plan':
             from .git_workflow import GitWorkflow
-            result = GitWorkflow(root, registry.contracts).inspect(args.branch)
+            workflow = GitWorkflow(root, registry.contracts)
+            if args.git_command == 'inspect':
+                result = workflow.inspect(args.branch)
+            elif args.git_command == 'remote':
+                result = workflow.remote_head(args.branch)
+            else:
+                result = workflow.prepare_push(args.branch)
         elif args.command == 'operation-plan':
             from .operation_plans import ApprovalStore, PlanPolicy
             from .security import SecurityStore, read_private_file
