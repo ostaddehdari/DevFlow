@@ -49,6 +49,24 @@ def main() -> int:
         if name == 'run':
             command.add_argument('--token-file', type=Path, required=True)
             command.add_argument('--owner', default='stage4-deploy-local')
+    transition = sub.add_parser('release-transition')
+    transition_commands = transition.add_subparsers(dest='transition_command', required=True)
+    for name in ('prepare-upgrade', 'prepare-rollback', 'validate', 'approve', 'verify', 'run'):
+        command = transition_commands.add_parser(name)
+        if name in ('prepare-upgrade', 'prepare-rollback'):
+            command.add_argument('--branch', required=True)
+        if name == 'prepare-rollback':
+            command.add_argument('--target-sha', required=True)
+        if name in ('validate', 'approve', 'verify', 'run'):
+            command.add_argument('--plan', type=Path, required=True)
+        if name == 'approve':
+            command.add_argument('--credential-file', type=Path, required=True)
+            command.add_argument('--seconds', type=int, default=600)
+        if name in ('verify', 'run'):
+            command.add_argument('--approval-id', required=True)
+        if name == 'run':
+            command.add_argument('--token-file', type=Path, required=True)
+            command.add_argument('--owner', default='stage4-transition-local')
     operation = sub.add_parser('operation-plan')
     operation_commands = operation.add_subparsers(dest='operation_command', required=True)
     for name in ('validate', 'approval-init', 'approve', 'verify', 'revoke', 'run-read', 'run-push'):
@@ -185,6 +203,38 @@ def main() -> int:
                         from .continuity import from_registry
                         from .deployment_execution import ReleaseExecutor
                         result = ReleaseExecutor(workflow, approvals, from_registry(
+                            registry, plan['project_id'])).run(
+                                plan, args.approval_id, args.token_file, args.owner)
+        elif args.command == 'release-transition':
+            from .release_transition import TransitionWorkflow, TransitionPolicy, TransitionExecutor
+            workflow = TransitionWorkflow(root, registry.contracts)
+            name = args.transition_command
+            if name == 'prepare-upgrade':
+                result = workflow.prepare('service.upgrade', args.branch)
+            elif name == 'prepare-rollback':
+                result = workflow.prepare('service.rollback', args.branch, args.target_sha)
+            else:
+                if args.plan.stat().st_size > 65536:
+                    raise DevFlowError('Release transition plan exceeds 64 KiB')
+                plan = read_json(args.plan)
+                policy = TransitionPolicy(workflow)
+                if name == 'validate':
+                    result = {'ok': True, **policy.validate(plan)}
+                else:
+                    from .operation_plans import ApprovalStore
+                    from .security import SecurityStore, read_private_file
+                    approvals = ApprovalStore(policy, SecurityStore(root, registry.contracts))
+                    if name == 'approve':
+                        try:
+                            credential = read_private_file(args.credential_file, 256).decode().strip()
+                        except UnicodeError as exc:
+                            raise DevFlowError('Operator credential is invalid') from exc
+                        result = approvals.grant(plan, credential, args.seconds)
+                    elif name == 'verify':
+                        result = {'ok': True, **approvals.verify(plan, args.approval_id)}
+                    else:
+                        from .continuity import from_registry
+                        result = TransitionExecutor(workflow, approvals, from_registry(
                             registry, plan['project_id'])).run(
                                 plan, args.approval_id, args.token_file, args.owner)
         elif args.command == 'git-plan':

@@ -1,0 +1,56 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://devflow.local/schemas/release.transition.plan.schema.json",
+  "title": "Approved pinned release transition",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "operation_id", "project_id", "kind", "service", "source", "preconditions", "release", "health", "execution_enabled"],
+  "properties": {
+    "schema_version": {"const": "1.0"},
+    "operation_id": {"type": "string", "pattern": "^service-transition-[0-9a-f]{32}$"},
+    "project_id": {"const": "devflow"},
+    "kind": {"enum": ["service.upgrade", "service.rollback"]},
+    "service": {"const": "devflow-mcp.service"},
+    "source": {
+      "type": "object", "additionalProperties": false,
+      "required": ["branch", "git_head_sha", "remote_head_sha", "remote_url"],
+      "properties": {
+        "branch": {"type": "string", "pattern": "^stage/[a-z0-9][a-z0-9._/-]{0,79}$"},
+        "git_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "remote_head_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "remote_url": {"const": "https://github.com/ostaddehdari/DevFlow.git"}
+      }
+    },
+    "preconditions": {
+      "type": "object", "additionalProperties": false,
+      "required": ["active_sha", "unit_sha256", "override_sha256"],
+      "properties": {
+        "active_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "unit_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+        "override_sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"}
+      }
+    },
+    "release": {
+      "type": "object", "additionalProperties": false,
+      "required": ["target_sha", "path", "pointer", "runtime_root"],
+      "properties": {
+        "target_sha": {"type": "string", "pattern": "^[0-9a-f]{40}$"},
+        "path": {"type": "string", "minLength": 1},
+        "pointer": {"type": "string", "minLength": 1},
+        "runtime_root": {"type": "string", "minLength": 1}
+      }
+    },
+    "health": {
+      "type": "object", "additionalProperties": false,
+      "required": ["resource", "discovery", "discovery_status", "unauthenticated_status", "listener"],
+      "properties": {
+        "resource": {"const": "https://srun.ir/mcpdevflow"},
+        "discovery": {"const": "https://srun.ir/.well-known/oauth-protected-resource/mcpdevflow"},
+        "discovery_status": {"const": 200},
+        "unauthenticated_status": {"const": 401},
+        "listener": {"const": "127.0.0.1:8765"}
+      }
+    },
+    "execution_enabled": {"const": true}
+  }
+}

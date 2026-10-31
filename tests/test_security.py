@@ -325,9 +325,12 @@ def test_stage3a_milestone_does_not_complete_agent_or_network(security, contract
         stage['status'] = 'COMPLETED'
         for work in stage['works']:
             work['status'] = 'COMPLETED'
-    design['stages'][3]['status'] = 'PLANNED'
-    for work in design['stages'][3]['works']:
-        work['status'] = 'PENDING'
+    # Reconstruct the historical Stage 2 fixture from the current project
+    # design, which may already contain completed Stage 4 work.
+    for stage in design['stages'][3:]:
+        stage['status'] = 'PLANNED'
+        for work in stage['works']:
+            work['status'] = 'PENDING'
     (folder / 'project.design.json').write_text(json.dumps(design))
     for name in ('state.json', 'resume.bundle.json'):
         path = folder / name
