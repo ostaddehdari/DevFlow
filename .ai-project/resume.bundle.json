@@ -1,26 +1,26 @@
 {
   "schema_version": "1.0",
   "project_id": "devflow",
-  "generated_at": "2026-10-27T20:04:24.953482+00:00",
+  "generated_at": "2026-10-31T08:01:05.334359+00:00",
   "current": {
-    "stage_id": "STAGE-03",
-    "work_id": "WORK-03-04",
-    "status": "COMPLETED"
+    "stage_id": "STAGE-04",
+    "work_id": "WORK-04-04",
+    "status": "VERIFYING"
   },
   "git": {
-    "branch": "stage/03c-verified",
-    "head_sha": "ae0054d007685265ba1bfbad81b4813e7b25537a"
+    "branch": "stage/04d-live-record",
+    "head_sha": "9f2d4967f63572eda0448c6c23fd9762bfc88a6c"
   },
   "servers": {
     "control": {
       "server_id": "devflow-control-server",
-      "deployed_sha": null,
-      "health": "UNKNOWN"
+      "deployed_sha": "42045b9d87550852a591b54982ff84a520516a6d",
+      "health": "HEALTHY"
     }
   },
   "current_error": null,
-  "last_action": "stage3c_authenticated_public_mcp_verified",
-  "next_action": "plan_stage4_controlled_execution",
+  "last_action": "first_pinned_release_migration_verified",
+  "next_action": "implement_approved_upgrade_and_targeted_rollback",
   "do_not_repeat": [
     "create_github_repository",
     "commit_stage0",
@@ -31,8 +31,9 @@
     "implement_stage2_execution_leases",
     "implement_local_identity_and_encrypted_vault",
     "implement_and_enroll_restricted_local_agent",
-    "configure_authenticated_https_mcp_transport"
+    "configure_authenticated_https_mcp_transport",
+    "service-deploy-ec861ec78e3a4159abb6e2479fa10009"
   ],
-  "latest_checkpoint_id": "CP-STAGE03C-VERIFIED",
+  "latest_checkpoint_id": "CP-STAGE04D-MIGRATED",
   "human_decision_required": false
 }

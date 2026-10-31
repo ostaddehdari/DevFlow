@@ -97,7 +97,7 @@
       "security_status",
       "agent_inventory"
     ],
-    "execution_readiness_scope": "Stage 3 read-only public MCP verified with Auth0 M2M. Stage 4 controlled execution, remote agent, and user OAuth client remain unimplemented.",
+    "execution_readiness_scope": "The first pinned MCP release migration was observed with authenticated tools. Approved upgrades and a tested targeted rollback remain pending.",
     "status_sources": {
       "stage0": "user-provided Git push output for c76c386",
       "stage1": "user-provided server bootstrap: 21 passed, registry ok, real MCP smoke passed; commit cfc0d427ace44210b3fc678c43215c01439122be"
@@ -711,7 +711,7 @@
       "id": "STAGE-04",
       "number": 4,
       "title": "اجرای محدود و استقرار",
-      "status": "PLANNED",
+      "status": "ACTIVE",
       "goal": "هر عمل با طرح، مجوز، lease و شواهد نتیجه اجرا شود.",
       "depends_on": [
         "STAGE-03"
@@ -722,7 +722,7 @@
           "number": "4.1",
           "title": "طرح عملیات و محدودهٔ مجاز",
           "type": "development",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "عملیات نوع‌دار و ورودی معتبر با precondition و postcondition.",
           "inputs": [
             "قراردادهای contracts/",
@@ -769,7 +769,7 @@
           "number": "4.2",
           "title": "اجرای محدود و ثبت رخداد",
           "type": "development",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "اجرای فرایند با مهلت، سقف خروجی و توقف کنترل‌شده.",
           "inputs": [
             "قراردادهای contracts/",
@@ -816,7 +816,7 @@
           "number": "4.3",
           "title": "گردش Git",
           "type": "development",
-          "status": "PENDING",
+          "status": "COMPLETED",
           "description": "کار در شاخهٔ مرحله و کنترل تغییرات قبل از commit و push.",
           "inputs": [
             "قراردادهای contracts/",
@@ -863,7 +863,7 @@
           "number": "4.4",
           "title": "استقرار و بازگشت",
           "type": "deployment",
-          "status": "PENDING",
+          "status": "VERIFYING",
           "description": "artifact تغییرناپذیر، شناسهٔ سورس، کنترل سلامت و rollback هدفمند.",
           "inputs": [
             "قراردادهای contracts/",

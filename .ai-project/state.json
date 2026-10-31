@@ -3,29 +3,29 @@
   "project_id": "devflow",
   "project_status": "ACTIVE",
   "current": {
-    "stage_id": "STAGE-03",
-    "stage_status": "COMPLETED",
-    "work_id": "WORK-03-04",
-    "work_status": "COMPLETED",
-    "operation": "stage3c_verification",
-    "step": "authenticated_public_mcp_verified",
+    "stage_id": "STAGE-04",
+    "stage_status": "ACTIVE",
+    "work_id": "WORK-04-04",
+    "work_status": "VERIFYING",
+    "operation": "service.deploy",
+    "step": "first_pinned_release_migrated",
     "attempt": 1
   },
   "git": {
-    "branch": "stage/03c-verified",
-    "head_sha": "ae0054d007685265ba1bfbad81b4813e7b25537a"
+    "branch": "stage/04d-live-record",
+    "head_sha": "9f2d4967f63572eda0448c6c23fd9762bfc88a6c"
   },
   "servers": {
     "control": {
       "server_id": "devflow-control-server",
-      "deployed_sha": null,
-      "health": "UNKNOWN",
-      "last_verified_at": null
+      "deployed_sha": "42045b9d87550852a591b54982ff84a520516a6d",
+      "health": "HEALTHY",
+      "last_verified_at": "2026-10-31T08:01:05.334359+00:00"
     }
   },
   "active_error_id": null,
-  "latest_checkpoint_id": "CP-STAGE03C-VERIFIED",
-  "next_action": "plan_stage4_controlled_execution",
+  "latest_checkpoint_id": "CP-STAGE04D-MIGRATED",
+  "next_action": "implement_approved_upgrade_and_targeted_rollback",
   "execution": null,
-  "updated_at": "2026-10-27T20:04:24.953482+00:00"
+  "updated_at": "2026-10-31T08:01:05.334359+00:00"
 }

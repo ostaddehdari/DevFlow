@@ -1,0 +1,38 @@
+{
+  "schema_version": "1.0",
+  "checkpoint_id": "CP-STAGE04D-MIGRATED",
+  "project_id": "devflow",
+  "created_at": "2026-10-31T08:01:05.334359+00:00",
+  "reason": "deployment",
+  "safe_to_resume": true,
+  "snapshot": {
+    "stage_id": "STAGE-04",
+    "work_id": "WORK-04-04",
+    "git_head_sha": "9f2d4967f63572eda0448c6c23fd9762bfc88a6c",
+    "server_deployments": {
+      "control": {
+        "deployed_sha": "42045b9d87550852a591b54982ff84a520516a6d",
+        "health": "HEALTHY",
+        "evidence_sha256": "b74f5940f915634122c187e9542793d3c2123d3d8b474ef5808afcc610d970ca"
+      }
+    },
+    "last_action": "first_pinned_release_migration_verified",
+    "next_action": "implement_approved_upgrade_and_targeted_rollback",
+    "operation_id": "service-deploy-ec861ec78e3a4159abb6e2479fa10009",
+    "authenticated_tools": 8,
+    "note": "First migration passed; approved upgrade and live rollback remain pending."
+  },
+  "do_not_repeat": [
+    "create_github_repository",
+    "commit_stage0",
+    "push_stage0",
+    "bind_control_server_address",
+    "run_stage1_bootstrap_on_control_server",
+    "install_stage1",
+    "implement_stage2_execution_leases",
+    "implement_local_identity_and_encrypted_vault",
+    "implement_and_enroll_restricted_local_agent",
+    "configure_authenticated_https_mcp_transport",
+    "service-deploy-ec861ec78e3a4159abb6e2479fa10009"
+  ]
+}
