@@ -1,8 +1,8 @@
 {
   "$schema": "https://agent-plugins.org/schemas/1.0.0/plugin.schema.json",
   "name": "devflow",
-  "version": "0.1.0",
-  "description": "DevFlow manages AI-assisted project design, migration, execution, recovery, continuity, and audit workflows.",
+  "version": "0.2.0",
+  "description": "DevFlow reads scoped project state and live control-server diagnostics through an OAuth-protected MCP endpoint.",
   "author": {
     "name": "DevFlow"
   },
@@ -10,17 +10,17 @@
     "com.openai": {
       "interface": {
         "displayName": "DevFlow",
-        "shortDescription": "AI project execution",
-        "longDescription": "Design, migrate, execute, resume, audit, debug, and recover software projects using persistent project state and external tools.",
+        "shortDescription": "DevFlow server status",
+        "longDescription": "Inspect DevFlow projects, continuity, service health, host resources, and Git status with read-only scoped MCP tools.",
         "developerName": "DevFlow",
         "category": "Productivity",
         "capabilities": [
           "Interactive"
         ],
         "defaultPrompt": [
-          "Design this project with DevFlow.",
-          "Migrate this existing project into DevFlow.",
-          "Resume this DevFlow project from its latest checkpoint."
+          "Show the live DevFlow control-service status.",
+          "Check DevFlow project continuity and Git status.",
+          "List the projects I can inspect in DevFlow."
         ]
       }
     }

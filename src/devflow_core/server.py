@@ -1,4 +1,4 @@
-"""Read-only ServerMaster bootstrap. Only stdio is exposed."""
+"""Scoped ServerMaster MCP with bounded local observations."""
 
 from mcp.server.fastmcp import FastMCP
 from mcp.types import ToolAnnotations
@@ -12,8 +12,9 @@ def build_server(registry: ControlRegistry, gate=None, control_root=None, *, tra
                   stateless_http=True, max_sessions=128, max_request_body_size=1048576,
                   streamable_http_path=http_path,
                   token_verifier=token_verifier, auth=auth, instructions=(
-        "Read-only registry and local continuity inspection. Recorded server settings are declarations, "
-        "not live health checks. No shell, deployment or watchdog is implemented; vault values are never exposed as tools."
+        "Read-only registry, continuity and bounded local service/resource/Git inspection. "
+        "Registry server entries are declarations. No shell, deployment or watchdog is exposed; "
+        "vault values and raw logs are never tools."
     ))
     annotations = ToolAnnotations(readOnlyHint=True, destructiveHint=False,
                                   idempotentHint=True, openWorldHint=False)
@@ -59,7 +60,8 @@ def build_server(registry: ControlRegistry, gate=None, control_root=None, *, tra
         return {"ok": True, "version": __version__, "transport": transport,
                 "read_only": True, "remote_agent": False, "local_restricted_agent": True, "vault": True, "vault_scope": "local_encrypted_reference_backend",
                 "identity_mode": "scoped_local_credential" if gate is not None else "trusted_local_process",
-                "execution_lease": True, "lease_scope": "cooperative_local_ledger", "watchdog": False}
+                "execution_lease": True, "lease_scope": "cooperative_local_ledger",
+                "live_control_diagnostics": True, "watchdog": False}
 
     @mcp.tool(annotations=annotations)
     def registry_projects() -> dict:
@@ -120,5 +122,33 @@ def build_server(registry: ControlRegistry, gate=None, control_root=None, *, tra
                 gate.check("project.read", project_id)
         root = control_root or registry.path.parent.parent
         return AgentStore(root, registry.contracts).inventory(projects)
+
+    def control_diagnostics(project_id):
+        from pathlib import Path
+        from .contracts import DevFlowError, read_json
+        from .live_diagnostics import LiveDiagnostics
+        root = Path(control_root or registry.path.parent.parent).resolve()
+        selected = selected_project(project_id)
+        if gate is not None:
+            gate.check("project.read", selected)
+        local = read_json(root / ".ai-project/project.settings.json")["project"]["id"]
+        if selected != local:
+            raise DevFlowError("The requested project is not hosted on this control server")
+        return LiveDiagnostics(root)
+
+    @mcp.tool(annotations=annotations)
+    def control_service_live(project_id: str | None = None) -> dict:
+        """Observe the local MCP service, pinned release, and public OAuth boundary."""
+        return control_diagnostics(project_id).service()
+
+    @mcp.tool(annotations=annotations)
+    def control_resources_live(project_id: str | None = None) -> dict:
+        """Read bounded memory, project filesystem capacity, and host load."""
+        return control_diagnostics(project_id).resources()
+
+    @mcp.tool(annotations=annotations)
+    def control_git_live(project_id: str | None = None) -> dict:
+        """Read the local control checkout branch, commit, and dirty flag."""
+        return control_diagnostics(project_id).git()
 
     return mcp

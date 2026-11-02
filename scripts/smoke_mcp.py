@@ -1,4 +1,4 @@
-"""Verify a real MCP subprocess: handshake, discovery and all eight read-only tools."""
+"""Verify a real MCP subprocess and its read-only tool inventory."""
 
 import argparse
 import asyncio
@@ -25,21 +25,24 @@ async def check(root: Path, registry: Path | None = None) -> None:
             initialized = await session.initialize()
             assert initialized.serverInfo.name == "DevFlow ServerMaster"
             listed = await session.list_tools()
-            expected = {"servermaster_ping", "registry_projects", "registry_servers",
+            baseline = {"servermaster_ping", "registry_projects", "registry_servers",
                         "registry_validate", "project_status", "continuity_status", "security_status", "agent_inventory"}
+            live = {"control_service_live", "control_resources_live", "control_git_live"}
+            expected = baseline | live
             assert {tool.name for tool in listed.tools} == expected
             for tool in listed.tools:
                 assert tool.annotations.readOnlyHint is True
-                response = await session.call_tool(tool.name, {})
-                assert not response.isError, tool.name
-                body = json.loads(response.content[0].text)
-                if tool.name == "servermaster_ping":
-                    assert body["read_only"] and body["transport"] == "stdio"
-                if tool.name == "registry_validate":
-                    assert body["ok"] and body["projects"] >= 1
+                if tool.name in baseline:
+                    response = await session.call_tool(tool.name, {})
+                    assert not response.isError, tool.name
+                    body = json.loads(response.content[0].text)
+                    if tool.name == "servermaster_ping":
+                        assert body["read_only"] and body["transport"] == "stdio"
+                    if tool.name == "registry_validate":
+                        assert body["ok"] and body["projects"] >= 1
             denied = await session.call_tool("shell_exec", {"command": "id"})
             assert denied.isError
-    print("PASS: MCP initialize, 8 read-only tools, calls, unknown-tool rejection and shutdown")
+    print("PASS: MCP initialize, 11 read-only tools, baseline calls, unknown-tool rejection and shutdown")
 
 
 if __name__ == "__main__":

@@ -258,7 +258,7 @@ async def scoped_mcp_check(root, contracts, registry_path, credential_file, stor
         async with ClientSession(read, write, read_timeout_seconds=timedelta(seconds=15)) as session:
             await session.initialize()
             listed = await session.list_tools()
-            assert len(listed.tools) == 8
+            assert len(listed.tools) == 11
             projects = await session.call_tool('registry_projects', {})
             assert not projects.isError
             body = json.loads(projects.content[0].text)
@@ -275,6 +275,11 @@ async def scoped_mcp_check(root, contracts, registry_path, credential_file, stor
                 assert not allowed.isError, name
             allowed = await session.call_tool('project_status', {'project_id': 'devflow'})
             assert not allowed.isError
+            resources = await session.call_tool('control_resources_live', {'project_id': 'devflow'})
+            assert not resources.isError
+            assert json.loads(resources.content[0].text)['memory_total_bytes'] > 0
+            foreign_live = await session.call_tool('control_resources_live', {'project_id': 'foreign'})
+            assert foreign_live.isError
             implicit = await session.call_tool('project_status', {})
             assert implicit.isError  # The active project is foreign and must not leak.
             store.revoke(credential_id)
@@ -282,6 +287,8 @@ async def scoped_mcp_check(root, contracts, registry_path, credential_file, stor
             assert revoked.isError
             ping = await session.call_tool('servermaster_ping', {})
             assert ping.isError
+            live = await session.call_tool('control_resources_live', {'project_id': 'devflow'})
+            assert live.isError
 
 
 def test_real_mcp_filters_projects_and_checks_revocation_on_open_session(security, settings_path, contracts):

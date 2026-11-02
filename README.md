@@ -48,6 +48,13 @@ bash scripts/devflow status
 | `continuity_status` | مالک lease، عملیات حل‌نشده و آخرین checkpoint محلی |
 | `security_status` | وضعیت محلی هویت و Vault، بدون نمایش اسرار |
 | `agent_inventory` | عامل‌های ثبت‌شدهٔ پروژه‌های مجاز، بدون اعتبارنامه |
+| `control_service_live` | وضعیت واقعی سرویس، نسخهٔ فعال و مرز OAuth عمومی |
+| `control_resources_live` | حافظه، فضای فایل‌سیستم پروژه و بار میزبان کنترل |
+| `control_git_live` | شاخه، شناسهٔ commit و تمیز بودن checkout کنترل |
+
+سه ابزار زنده پس از انتشار شاخه و ارتقای نسخهٔ فعال قابل استفاده‌اند؛ نسخهٔ
+پیش از این ارتقا، فقط هشت ابزار قبلی را داشت. راهنمای اتصال کاربر و استقرار در
+[docs/STAGE-12-DELIVERY.md](docs/STAGE-12-DELIVERY.md) است.
 
 برای اجرا با یک کلاینت محلی MCP، نمونهٔ تنظیمات در `examples/mcp.local.json` است.
 اجرای `bash scripts/devflow serve` منتظر ورودی پروتکل روی stdin می‌ماند؛

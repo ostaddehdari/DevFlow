@@ -48,6 +48,18 @@ def test_oauth_verifier_rejects_wrong_audience_scope_subject_client_and_expiry(c
     assert check(signed()) is None
 
 
+def test_user_authorization_code_access_token_uses_exact_subject_and_client(configured_verifier):
+    verifier, signed, config, _ = configured_verifier
+    config['principals'].append({'subject': 'auth0|user-42', 'client_id': 'chatgpt-user-client',
+                                 'role': 'viewer', 'projects': ['devflow']})
+    check = lambda token: asyncio.run(verifier.verify_token(token))
+    user = check(signed(sub='auth0|user-42', client_id=None, azp='chatgpt-user-client'))
+    assert user.subject == 'auth0|user-42'
+    assert check(signed(sub='auth0|user-42', client_id=None, azp='other-client')) is None
+    assert check(signed(sub='auth0|user-42', client_id=None, azp='chatgpt-user-client',
+                        scope='openid profile')) is None
+
+
 def test_bearer_gate_and_protected_resource_metadata(configured_verifier):
     verifier,signed,_,_=configured_verifier
     auth=AuthSettings(issuer_url=AnyHttpUrl(ISSUER),resource_server_url=AnyHttpUrl(RESOURCE),
