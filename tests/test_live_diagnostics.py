@@ -1,11 +1,15 @@
 """The public diagnostic inventory has a fixed local scope and no raw logs."""
 
+import asyncio
+import json
+import threading
 from types import SimpleNamespace
 
 import pytest
 
 from devflow_core.contracts import DevFlowError
 from devflow_core.live_diagnostics import LiveDiagnostics
+from devflow_core.server import build_server
 
 
 class Response:
@@ -78,3 +82,28 @@ def test_rejects_unexpected_release_pointer(tmp_path, monkeypatch):
     monkeypatch.setattr(LiveDiagnostics, "_run", lambda *_: "ActiveState=active\nMainPID=100")
     with pytest.raises(DevFlowError, match="pointer"):
         LiveDiagnostics(root).service()
+
+
+def test_mcp_service_probe_keeps_event_loop_available(settings_path, registry, monkeypatch):
+    """The public probe calls this same MCP server and must not deadlock it."""
+    registry.register(settings_path)
+    started = threading.Event()
+    released = threading.Event()
+
+    def service(_self):
+        started.set()
+        return {"released": released.wait(timeout=2)}
+
+    monkeypatch.setattr(LiveDiagnostics, "service", service)
+    server = build_server(registry, control_root=settings_path.parent.parent)
+
+    async def check():
+        task = asyncio.create_task(server.call_tool("control_service_live", {"project_id": "devflow"}))
+        assert await asyncio.wait_for(asyncio.to_thread(started.wait, 1), 1.5)
+        released.set()
+        return await asyncio.wait_for(task, 2)
+
+    try:
+        assert json.loads(asyncio.run(check())[0].text)["released"] is True
+    finally:
+        released.set()

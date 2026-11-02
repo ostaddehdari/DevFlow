@@ -137,9 +137,13 @@ def build_server(registry: ControlRegistry, gate=None, control_root=None, *, tra
         return LiveDiagnostics(root)
 
     @mcp.tool(annotations=annotations)
-    def control_service_live(project_id: str | None = None) -> dict:
+    async def control_service_live(project_id: str | None = None) -> dict:
         """Observe the local MCP service, pinned release, and public OAuth boundary."""
-        return control_diagnostics(project_id).service()
+        import asyncio
+        inspector = control_diagnostics(project_id)
+        # The public OAuth probe calls this same server. Keep its event loop free
+        # while the synchronous network and systemd checks run in a worker.
+        return await asyncio.to_thread(inspector.service)
 
     @mcp.tool(annotations=annotations)
     def control_resources_live(project_id: str | None = None) -> dict:

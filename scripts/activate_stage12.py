@@ -29,6 +29,7 @@ PRIOR_SHA = "42045b9d87550852a591b54982ff84a520516a6d"
 ISSUER = "https://dev-fqzv1aqwljc7mhwz.us.auth0.com/"
 CLIENT_ID = "hfOqg60yFiUrVTVc04u9C5L485Ztkqnb"
 RESOURCE = "https://srun.ir/mcpdevflow"
+WORKER_SCRIPT = Path(__file__).resolve()
 
 
 def command(*arguments, timeout=120):
@@ -247,7 +248,7 @@ def main():
         os.fchmod(descriptor, 0o600)
         with os.fdopen(descriptor, "wb") as output:
             job = subprocess.Popen(
-                [sys.executable, str(Path(__file__).resolve()), "--worker",
+                [sys.executable, str(WORKER_SCRIPT), "--worker",
                  str(token_path), expected_head, digest], cwd=ROOT, stdin=subprocess.DEVNULL,
                 stdout=output, stderr=subprocess.STDOUT, start_new_session=True,
                 close_fds=True, env={**os.environ, "PYTHONPATH": str(ROOT / "src")})
